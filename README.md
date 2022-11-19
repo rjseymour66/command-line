@@ -42,7 +42,77 @@ io.Reader // any go type that you can read data from
 io.Writer // any go type that you can write to
 ```
 
+## Methods
 
+### Value recievers
+
+Use a value receiver when the method:
+- mutates the receiver
+- is too large to reasonably pass in memory
+
+Inside the method body, dereference the receiver using the `*` operator to access and mutate the value of the receiver. Otherwise, you are operating on the address value:
+
+```go
+func (r *Receiver) MethodName(param type) {
+    *r = // do something else
+}
+```
+> **Best practice**: The method set of a single type should use the same receiver type. If the method does not mutate the receiver, you can assign the pointer receiver to a value at the start of the method.
+
+
+## Errors
+
+`fmt.Errorf` creates a custom formatted error:
+```go
+return fmt.Errorf("Error: %s is not a valid string", s)
+```
+
+Test if the action returns a specific error. For example, the following snippet returns `nil` if the file does not exist; otherwise, it returns the error:
+```go
+file, err := os.ReadFile(filename)
+if err != nil {
+    if errors.Is(err, os.ErrNotExist) {
+        return nil
+    }
+    return err
+}
+```
+
+## Data structures and formats
+
+### Slices
+
+Add to a slice with append:
+```go
+*sliceName = append(*sliceName, valToAppend)
+```
+### JSON
+
+### Marshalling
+
+> **IMPORTANT**: Always pass pointers to `json.Marshall` and `json.Unmarshall`.
+
+**Marshalling** transforms a memory representation of an object into the JSON data format for storage or transmission.
+
+### Unmarshalling
+**Unmarshalling** transforms a JSON object into a memory representation that is executable.
+
+To unmarshall a JSON object into memory, pass the data and a pointer to the data structure that you want to store the data in:
+```go
+type person struct {
+    name    string
+    age     int
+}
+
+var jsonData := `[
+{"name": "Steve", "age": "21"},
+{"name": "Bob", "age": "68"}
+]`
+
+var unmarshalled []person
+
+json.Unmarshall(data, &unmarshalled)
+```
 
 ### go.mod and go.sum
 
@@ -52,9 +122,18 @@ Go modules allow you to write go programs outside of the $GOPATH directory, as i
 
 Go sum records the checksum for each module in the application to ensure that each build uses the correct version.
 
-## App structure
+## Structure
+
+
 
 ## Reading data
+
+### Writing from a file
+
+Read data from a file with the `os` package. `ReadFile` reads the contents of a file and returns a `nil` error:
+```go
+os.ReadFile(filename)
+```
 
 ### Scanner for lines and words
 
@@ -82,6 +161,21 @@ for scanner.Scan() {
     byteLength += len(scanner.Bytes())    
 }
 ```
+## Writing data
+
+### Writing to a file
+
+Write data to a file with the `os` package. `WriteFile` writes to an existing file or creates one, if necessary:
+```go
+os.WriteFile(filename, dataToWrite, perms)
+```
+> **Linux permissions**: Set Linux file permissions for the file owner, group, and all other users (`owner-group-others`). The permission options are read, write, and execute. Use octal values to set permssions:
+read: 4
+write: 2
+execute: 1
+
+When you assign permissions in an programming language, you have to tell the program that you are using the octal base. You do this by beginning the number with a `0`. So, `0644` permissions means that the file owner has read and write permissions, and the group and all other users have read permissions.
+
 ## Flags
 
 `flag.<FunctionName>` lets you define CLI flags. For example, to create a flag that performs an action if it exists, you can use `flag.Bool`.
@@ -99,7 +193,15 @@ Now, you have a variable `lines` that stores the address of a `bool` set to `fal
 func cliFunc(r io.Reader, useLines bool) {}
 cliFunc(os.Stdin, *lines)
 ```
+## Time
 
-
+Get the current time:
+```go
+current = time.Now()
+```
+Get the zero value for time.Time with an empty struct:
+```go
+zeroVal = time.Time{}
+```
 # Tests
 
