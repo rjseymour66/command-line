@@ -169,7 +169,7 @@ Write data to a file with the `os` package. `WriteFile` writes to an existing fi
 ```go
 os.WriteFile(filename, dataToWrite, perms)
 ```
-> **Linux permissions**: Set Linux file permissions for the file owner, group, and all other users (`owner-group-others`). The permission options are read, write, and execute. Use octal values to set permssions:
+> **Linux permissions**: Set Linux file permissions for the file owner, group, and all other users (`owner-group-others`). The permission options are read, write, and execute. Use octal values to set permssions:  
   read: 4  
   write: 2  
   execute: 1  
