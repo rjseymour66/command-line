@@ -71,6 +71,17 @@ for scanner.Scan() {
     // do something 
 }
 ```
+
+To find the number of bytes in each scanned token:
+```go
+// scan words
+scanner.Split(bufio.ScanWords)
+
+byteLength := 0
+for scanner.Scan() {
+    byteLength += len(scanner.Bytes())    
+}
+```
 ## Flags
 
 `flag.<FunctionName>` lets you define CLI flags. For example, to create a flag that performs an action if it exists, you can use `flag.Bool`.

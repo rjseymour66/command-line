@@ -21,21 +21,25 @@ func main() {
 	fmt.Println(count(os.Stdin, *lines, *byteCount))
 }
 
-func count(r io.Reader, countLines bool, countBytes bool) int {
+func count(r io.Reader, countLines bool, countBytes bool) (int, int) {
 	scanner := bufio.NewScanner(r)
 
 	if !countLines {
 		scanner.Split(bufio.ScanWords)
 	}
 
-	if countBytes {
-		scanner.Split(bufio.ScanBytes)
-	}
-
 	wc := 0
+	blength := 0
 
-	for scanner.Scan() {
-		wc++
+	if !countBytes {
+		for scanner.Scan() {
+			wc++
+		}
+	} else {
+		for scanner.Scan() {
+			wc++
+			blength += len(scanner.Bytes())
+		}
 	}
-	return wc
+	return wc, blength
 }
