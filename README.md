@@ -77,6 +77,17 @@ if err != nil {
     return err
 }
 ```
+### Returning errors
+
+Return only an error if you want to check that a method performs an operation correctly:
+
+```go
+func Add(a *int, b int) error {
+    a += b
+    return nil
+}
+```
+
 
 ## Data structures and formats
 
@@ -86,6 +97,20 @@ Add to a slice with append:
 ```go
 *sliceName = append(*sliceName, valToAppend)
 ```
+
+### Structs
+
+Create a zero-value struct:
+```go
+type person struct {
+    name    string
+    age     int
+}
+
+john := person{}
+```
+
+
 ### JSON
 
 ### Marshalling
@@ -205,3 +230,49 @@ zeroVal = time.Time{}
 ```
 # Tests
 
+## General flow
+
+When you create a test, you need to set up an environment, execute the functionality that you are testing, then tear down any temporary files you created in the environment:
+
+```go
+func TestMethod(t *testing.T) {
+    // set up env
+    st := testStruct{}
+    // test the functionality, including testing for errors
+    st.MethodImTesting(...args)
+
+    if err != nil {
+        ...
+    }
+}
+```
+
+## Packages
+
+Place `*_test.go` files in the same directory as the code that you are testing. When you declare the `package` in the test file, use the original package name followed by `_test`. For example:
+
+```go
+package original_test
+```
+
+## Utilities
+
+Create a temporary file if you need to test an action like deleting a file from the file system. Use `os.CreateTemp()`. Be sure to clean up with `os.Remove(tempfile.Name())`:
+
+```go
+os.CreateTemp(".", )
+```
+
+## Error handling
+
+The test object (`*testing.T`) provides the following methods troubleshoot during testing
+
+`t.Fatalf()` logs a formatted error and fails the test, then stops test execution:
+```go
+t.Fatalf("Error message: %s", err) // Logf() + FailNow()
+```
+
+`t.Errorf()` logs a formatted error and fails the test, but continues test execution:
+```go
+t.Errorf("Error message: %s", err) // Logf() + Fail()
+```

@@ -47,6 +47,19 @@ func (l *List) Complete(i int) error {
 	return nil
 }
 
+// Delete method deletes a ToDo item from the list
+func (l *List) Delete(i int) error {
+	ls := *l
+	if i <= 0 || i > len(ls) {
+		return fmt.Errorf("Item %d does not exist", i)
+	}
+
+	// 0 base index
+	*l = append(ls[:i-1], ls[i:]...)
+
+	return nil
+}
+
 // Save method encodes the List as JSON and saves it
 // using the provided file name
 func (l *List) Save(filename string) error {
