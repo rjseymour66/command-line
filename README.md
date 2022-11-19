@@ -170,9 +170,9 @@ Write data to a file with the `os` package. `WriteFile` writes to an existing fi
 os.WriteFile(filename, dataToWrite, perms)
 ```
 > **Linux permissions**: Set Linux file permissions for the file owner, group, and all other users (`owner-group-others`). The permission options are read, write, and execute. Use octal values to set permssions:
-read: 4
-write: 2
-execute: 1
+  read: 4  
+  write: 2  
+  execute: 1  
 
 When you assign permissions in an programming language, you have to tell the program that you are using the octal base. You do this by beginning the number with a `0`. So, `0644` permissions means that the file owner has read and write permissions, and the group and all other users have read permissions.
 
