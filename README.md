@@ -17,7 +17,7 @@ Build the binary:
 $ go test -v
 ```
 
-### Cross-compilation
+#### Cross-compilation
 
 Build static go binaries for operating systems that are different than the one that you are building it on. Because you build a static binary, the target machine does not need any additional libraries or tools to run the binary.
 
@@ -44,7 +44,7 @@ io.Writer // any go type that you can write to
 
 ## Methods
 
-### Value recievers
+#### Value recievers
 
 Use a value receiver when the method:
 - mutates the receiver
@@ -77,7 +77,7 @@ if err != nil {
     return err
 }
 ```
-### Returning errors
+#### Returning errors
 
 Return only an error if you want to check that a method performs an operation correctly:
 
@@ -91,14 +91,14 @@ func Add(a *int, b int) error {
 
 ## Data structures and formats
 
-### Slices
+#### Slices
 
 Add to a slice with append:
 ```go
 *sliceName = append(*sliceName, valToAppend)
 ```
 
-### Structs
+#### Structs
 
 Create a zero-value struct:
 ```go
@@ -111,15 +111,15 @@ john := person{}
 ```
 
 
-### JSON
+#### JSON
 
-### Marshalling
+#### Marshalling
 
 > **IMPORTANT**: Always pass pointers to `json.Marshall` and `json.Unmarshall`.
 
 **Marshalling** transforms a memory representation of an object into the JSON data format for storage or transmission.
 
-### Unmarshalling
+#### Unmarshalling
 **Unmarshalling** transforms a JSON object into a memory representation that is executable.
 
 To unmarshall a JSON object into memory, pass the data and a pointer to the data structure that you want to store the data in:
@@ -139,7 +139,7 @@ var unmarshalled []person
 json.Unmarshall(data, &unmarshalled)
 ```
 
-### go.mod and go.sum
+#### go.mod and go.sum
 
 Go modules group related packages into a single unit to be versioned together. Because they track an application's dependencies, they ensure that users build the application with the same dependencies as the original developer.
 
@@ -153,14 +153,14 @@ Go sum records the checksum for each module in the application to ensure that ea
 
 ## Reading data
 
-### Writing from a file
+#### Reading from a file
 
 Read data from a file with the `os` package. `ReadFile` reads the contents of a file and returns a `nil` error:
 ```go
 os.ReadFile(filename)
 ```
 
-### Scanner for lines and words
+#### Scanner for lines and words
 
 The Scanner type accepts an `io.Reader` and reads data that is delimited by spaces or new lines. By default, it reads lines, but you can configure it to read words:
 
@@ -188,7 +188,7 @@ for scanner.Scan() {
 ```
 ## Writing data
 
-### Writing to a file
+#### Writing to a file
 
 Write data to a file with the `os` package. `WriteFile` writes to an existing file or creates one, if necessary:
 ```go
