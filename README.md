@@ -35,6 +35,12 @@ Initialize a buffer with string contents using the bytes.NewBufferString("string
 b := bytes.NewBufferString("string")
 ```
 
+## Pointers
+
+#### Operators
+
+The `&` operator gets the address of an object. Use this for the same reasons that you use a pointer receiver: mutating the object or in place of passing a large object in memory.
+
 ## Interfaces
 
 ```go
@@ -77,6 +83,15 @@ if err != nil {
     return err
 }
 ```
+
+#### Compact error checking
+
+If a function or method returns only an error, you can assign any error and check it for nil on the same line:
+```go
+if err := returnErr(); err != nil {
+    // handle error
+}
+```
 #### Returning errors
 
 Return only an error if you want to check that a method performs an operation correctly:
@@ -87,7 +102,13 @@ func Add(a *int, b int) error {
     return nil
 }
 ```
-
+When you ae returning an error, use STDERR instead of STDOUT to display error messages, and exit with a code other than `1`:
+```go
+if err := l.Get(todoFileName); err != nil {
+    fmt.Fprintln(os.Stderr, err)
+    os.Exit(1)
+}
+```
 
 ## Data structures and formats
 
@@ -229,6 +250,18 @@ Get the zero value for time.Time with an empty struct:
 zeroVal = time.Time{}
 ```
 # Tests
+
+## Integration tests
+
+Integration tests test how the program behaves when interacted with from the outside world--how a user uses it. This means that you test the `main()` method.
+
+In Go, you test the main method with the `TestMain()` function so you can set up and tear down resources more easily. For example, you might need to create a temporary file or build and execute a binary. You do not want to keep these artifacts in the program after testing.
+
+Follow these general guidelines when running integration tests:
+1. Check the machine with `runtime.GOOS`
+2. Create the build command with `exec.Command()`, then use `.Run()` to execute that command. Check for errors
+3. Run the tests with `m.Run()`
+4. Clean up any artifacts with `os.Remove(artifactname)`
 
 ## General flow
 
