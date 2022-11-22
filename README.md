@@ -37,15 +37,54 @@ b := bytes.NewBufferString("string")
 
 ## Pointers
 
-#### Operators
+`*` either declares a pointer variable or dereferences a pointer. Dereferencing is basically following a pointer to the address and retrieving stored value.
 
-The `&` operator gets the address of an object. Use this for the same reasons that you use a pointer receiver: mutating the object or in place of passing a large object in memory.
+`&` accesses the address of a variable. Use this for the same reasons that you use a pointer receiver: mutating the object or in place of passing a large object in memory.
+
+Here are some bad examples:
+
+```go
+func main() {
+	test := "test string"
+	var ptr_addr *string
+	ptr_addr = &test
+	fmt.Printf("ptr_addr:\t%v\n", ptr_addr)
+	fmt.Printf("*ptr_addr:\t%v\n", *ptr_addr)
+	fmt.Printf("test:\t\t%v\n", test)
+	fmt.Printf("&test:\t\t%v\n", &test)
+}
+
+// output
+ptr_addr:	0xc00009e210
+*ptr_addr:	test string
+test:		test string
+&test:		0xc00009e210
+```
+
+## Environment variables
+
+Getting and checking if an environment variable is set:
+```go
+if os.Getenv("ENV_VAR_NAME") != "" {
+    varName = os.Getenv("ENV_VAR_NAME")
+}
+```
+
 
 ## Interfaces
 
 ```go
 io.Reader // any go type that you can read data from
 io.Writer // any go type that you can write to
+fmt.Stringer // returns a string. Similar to .toString() in Java
+```
+
+```go
+func (r *Receiver) String() string {
+    // return a string
+}
+
+fmt.Print(*r)
 ```
 
 ## Methods
@@ -224,7 +263,7 @@ When you assign permissions in an programming language, you have to tell the pro
 
 ## Flags
 
-`flag.<FunctionName>` lets you define CLI flags. For example, to create a flag that performs an action if it exists, you can use `flag.Bool`.
+`flag.<FunctionName>` lets you define CLI flags. For example, to create a flag that performs an action if the flag is provided, you can use `flag.Bool`.
 
 The following flag function definition returns the value of a `bool` variable that stores the value of the flag. After you create a flag, you have to call the `Parse()` function to parse the arguments provided to the command line:
 
@@ -233,7 +272,39 @@ lines := flag.Bool("l", false, "Count the number of lines")
       // flag.Bool(flagName, default value, usage info)
 flag.Parse()
 ```
-Now, you have a variable `lines` that stores the address of a `bool` set to `false`. To use the value in this variable that 'points' to an address, you have to derefence it with the `*` symbol. If you don't dereference, you will use the address of the variable, not the value stored at the address:
+> **IMPORTANT**: Each `flag.*` returns a pointer. To use the value in this variable that 'points' to an address, you have to derefence it with the `*` symbol. If you don't dereference, you will use the address of the variable, not the value stored at the address
+
+Now, you have a variable `lines` that stores the address of a `bool` set to `false`. When a user includes the `-l` flag in the CLI invocation, `lines` is set to true. For `str := flag.String(...)`, the variable stores the string that the user enters after the `-str` flag.
+
+### Multiple flags
+
+If you use multiple flags in your application, use a `switch` statment to select the action based on the provided flags:
+
+```go
+switch {
+case *flag1:
+    // handle flag
+case *flag2:
+    // handle flag
+default:
+...
+}
+```
+### Usage info
+
+The default values for each flag are listed when the user uses the `-h` option. You can add a custom usage message with the `flag.Usage()` function. You have to assign `flag.Usage()` a immediately-executing function that prints info to STDOUT.
+
+Place the `flag.Usage()` definition at the beginning of the main method:
+
+```go
+flag.Usage = func() {
+    fmt.Fprintf(flag.CommandLine.Output(), "%s tool. Additional info\n", os.Args[0])
+    fmt.Fprintf(flag.CommandLine.Output(), "Copyright 2022\n")
+    fmt.Fprintln(flag.CommandLine.Output(), "Usage information:")
+    // print the default settings for each flag
+    flag.PrintDefaults()
+}
+```
 
 ```go
 func cliFunc(r io.Reader, useLines bool) {}
@@ -277,6 +348,19 @@ func TestMethod(t *testing.T) {
     if err != nil {
         ...
     }
+}
+```
+
+## Subtests with t.Run()
+
+Use `t.Run()`, You can run subtests within a test function. `t.Run()` accepts two parameters: the name of the test, and an unnamed test function. Nest `t.Run()` under the main func Test* function to target functionality, such as different command line options:
+
+```go
+func TestCLI(t *testing.T) {
+    // set up tests
+    t.Run("Subtest 1", func(t *testing.T) {
+        // run subtest
+    })
 }
 ```
 
