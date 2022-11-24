@@ -43,7 +43,7 @@ Go sum records the checksum for each module in the application to ensure that ea
 ## Project structure
 
 ```
-root
+.
 ├── cmd 
 │   └── todo
 │       ├── main.go         // config, parse, switch {} flags
