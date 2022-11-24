@@ -32,6 +32,28 @@ $ GOOS=window go build
 // For a list of accepted GOOS values, see https://go.dev/src/go/build/syslist.go
 ```
 
+## go.mod and go.sum
+
+Go modules group related packages into a single unit to be versioned together. Because they track an application's dependencies, they ensure that users build the application with the same dependencies as the original developer.
+
+Go modules allow you to write go programs outside of the $GOPATH directory, as in previous releases. 
+
+Go sum records the checksum for each module in the application to ensure that each build uses the correct version.
+
+## Project structure
+
+```
+root
+├── cmd 
+│   └── todo
+│       ├── main.go         // config, parse, switch {} flags
+│       └── main_test.go    // integration tests (user interaction)
+├── go.mod
+├── todo.go                 // API logic for flags
+└── todo_test.go            // unit tests
+
+```
+
 ## Strings
 
 Initialize a buffer with string contents using the bytes.NewBufferString("string") func. This simulates an input (like STDIN):
@@ -223,18 +245,6 @@ var unmarshalled []person
 
 json.Unmarshall(data, &unmarshalled)
 ```
-
-#### go.mod and go.sum
-
-Go modules group related packages into a single unit to be versioned together. Because they track an application's dependencies, they ensure that users build the application with the same dependencies as the original developer.
-
-Go modules allow you to write go programs outside of the $GOPATH directory, as in previous releases. 
-
-Go sum records the checksum for each module in the application to ensure that each build uses the correct version.
-
-## Structure
-
-
 
 ## Reading data
 
