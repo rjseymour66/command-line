@@ -1,5 +1,9 @@
 # Notes
 
+## Todo
+
+1. How to use the `...` operator to expand a slice into a list of values (p. 40).
+
 ## Go commands
 
 Format code:
@@ -34,6 +38,15 @@ Initialize a buffer with string contents using the bytes.NewBufferString("string
 ```go
 b := bytes.NewBufferString("string")
 ```
+
+Use `io.WriteString` to write a string to a writer as a slice of bytes:
+```go
+output, err := io.WriteString(os.Stdout, "Log to console")
+if err != nil {
+    log.Fatal(err)
+}
+```
+This command seems to be used a lot with the `exec.Command` `os/exec` package?
 
 ## Pointers
 
@@ -73,6 +86,8 @@ if os.Getenv("ENV_VAR_NAME") != "" {
 
 ## Interfaces
 
+When possible, use interfaces as function arguments instead of concrete types to increase flexibility.
+
 ```go
 io.Reader // any go type that you can read data from
 io.Writer // any go type that you can write to
@@ -86,6 +101,7 @@ func (r *Receiver) String() string {
 
 fmt.Print(*r)
 ```
+
 
 ## Methods
 
@@ -104,6 +120,15 @@ func (r *Receiver) MethodName(param type) {
 ```
 > **Best practice**: The method set of a single type should use the same receiver type. If the method does not mutate the receiver, you can assign the pointer receiver to a value at the start of the method.
 
+### Variadic functions
+
+Represents zero or more values of a type. Precede the type with three periods (`...`). For example:
+
+```go
+func concatInput(args ...string) {
+    return strings.Join(args, " "), nil
+}
+```
 
 ## Errors
 
@@ -229,7 +254,7 @@ scanner := bufio.NewScanner(r)
 // scan words
 scanner.Split(bufio.ScanWords)
 ```
-Use the `.Scan()` function in a loop to read tokens:
+Use the `.Scan()` function in a loop to read lines or tokens, depending on the `.Split()` configuration:
 ```go
 for scanner.Scan() {
     // do something 
@@ -320,6 +345,40 @@ Get the zero value for time.Time with an empty struct:
 ```go
 zeroVal = time.Time{}
 ```
+
+## Building commands with os/exec
+
+Create a command that adds a task to a todo application through STDIN. For brevity, this example omits error checking in some places:
+```go
+/* 1 */ task := "This is the task"
+/* 2 */ workingDir := os.Getwd() // check error
+/* 3 */ cmdPath := filepath.Join(workingDir, appName)
+/* 4 */ cmd := exec.Command(cmdPath, "-add")
+/* 5 */ cmdStdIn, err := cmd.StdinPipe()
+/* 6 */
+io.WriteString(cmdStdIn, task)
+cmdStdIn.Close()
+
+/* 7 */
+if err := cmd.Run(); err != nil {
+    t.Fatal(err)
+}
+// Alt 7: you could run cmd.CombinedOutput() to get the STDOUT and STDERR
+out, err := cmd.CombinedOutput()
+// error checking
+// https://pkg.go.dev/os/exec@go1.19.3#Cmd.CombinedOutput
+```
+In the preceding example:
+1. Create the task string
+2. Get the current working directory from root
+3. Create a command consisting absolute path and add the name of the binary
+4. `cmd` is a command struct that executes the command with the provided arguments
+5. Connect a pipe to the command's STDIN. The command now looks like this:
+   `| /path/to/appName -add`
+6. Write the task to STDIN
+7. Run the command
+
+
 # Tests
 
 ## Integration tests
@@ -356,8 +415,12 @@ func TestMethod(t *testing.T) {
 Use `t.Run()`, You can run subtests within a test function. `t.Run()` accepts two parameters: the name of the test, and an unnamed test function. Nest `t.Run()` under the main func Test* function to target functionality, such as different command line options:
 
 ```go
-func TestCLI(t *testing.T) {
-    // set up tests
+func TestMain(m *testing.M) {
+    // build binary
+    // build command to execute binary
+    // run command
+    // result := m.Run() // this runs the t.Run() tests
+    // clean up tests
     t.Run("Subtest 1", func(t *testing.T) {
         // run subtest
     })

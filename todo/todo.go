@@ -103,3 +103,16 @@ func (l *List) String() string {
 	}
 	return formatted
 }
+
+func (l *List) Verbose() string {
+	formatted := ""
+
+	for k, t := range *l {
+		prefix := "  "
+		if t.Done {
+			prefix = "X "
+		}
+		formatted += fmt.Sprintf("%s%d: %s %s\n", prefix, k+1, t.Task, t.CreatedAt.String())
+	}
+	return formatted
+}
