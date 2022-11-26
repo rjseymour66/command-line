@@ -100,18 +100,44 @@ the task to the app with the '-add' option.`)
 	}
 }
 
-func getTask(r io.Reader, args ...string) (string, error) {
+// func getTask(r io.Reader, args ...string) (string, error) {
+// 	// if task added as args
+// 	if len(args) > 0 {
+// 		return strings.Join(args, " "), nil
+// 	}
+
+// 	// if task added with STDIN
+// 	s := bufio.NewScanner(r)
+// 	s.Scan()
+// 	if err := s.Err(); err != nil {
+// 		return "", err
+// 	}
+// 	if len(s.Text()) == 0 {
+// 		return "", fmt.Errorf("task cannot be blank")
+// 	}
+// 	return s.Text(), nil
+// }
+
+func getTask(r io.Reader, args ...string) ([]string, error) {
+	var tasks []string
+	// if task is added as args
 	if len(args) > 0 {
-		return strings.Join(args, " "), nil
+		t := strings.Join(args, " ")
+		tasks = append(tasks, t)
+		return tasks, nil
 	}
 
+	// if task added with STDIN
 	s := bufio.NewScanner(r)
-	s.Scan()
-	if err := s.Err(); err != nil {
-		return "", err
+	for s.Scan() {
+		if err := s.Err(); err != nil {
+			return nil, err
+		}
+		tasks = append(tasks, s.Text())
+
+		if len(s.Text()) == 0 {
+			return nil, fmt.Errorf("task cannot be blank")
+		}
 	}
-	if len(s.Text()) == 0 {
-		return "", fmt.Errorf("task cannot be blank")
-	}
-	return s.Text(), nil
+	return tasks, nil
 }

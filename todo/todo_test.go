@@ -11,7 +11,8 @@ func TestAdd(t *testing.T) {
 	l := todo.List{}
 
 	taskName := "New Task"
-	l.Add(taskName)
+	tasks := []string{taskName}
+	l.Add(tasks)
 
 	if l[0].Task != taskName {
 		t.Errorf("Expected %q, got %q instead.", taskName, l[0].Task)
@@ -23,7 +24,8 @@ func TestComplete(t *testing.T) {
 	l := todo.List{}
 
 	taskName := "New Task"
-	l.Add(taskName)
+	tasks := []string{taskName}
+	l.Add(tasks)
 
 	if l[0].Task != taskName {
 		t.Errorf("Expected %q, got %q instead.", taskName, l[0].Task)
@@ -50,9 +52,7 @@ func TestDelete(t *testing.T) {
 		"New Task 3",
 	}
 
-	for _, v := range tasks {
-		l.Add(v)
-	}
+	l.Add(tasks)
 
 	if l[0].Task != tasks[0] {
 		t.Errorf("Expected %q, got %q instead.", tasks[0], l[0].Task)
@@ -75,7 +75,8 @@ func TestSaveGet(t *testing.T) {
 	l2 := todo.List{}
 
 	taskName := "New Task"
-	l1.Add(taskName)
+	tasks := []string{taskName}
+	l1.Add(tasks)
 
 	if l1[0].Task != taskName {
 		t.Errorf("Expected %q, got %q instead.", taskName, l1[0].Task)

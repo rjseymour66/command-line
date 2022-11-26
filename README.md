@@ -21,6 +21,16 @@ Build the binary:
 $ go test -v
 ```
 
+## Linux stuff
+
+Write to a file from with cat:
+
+```bash
+cat << fileName >
+# enter text
+EOF
+```
+
 #### Cross-compilation
 
 Build static go binaries for operating systems that are different than the one that you are building it on. Because you build a static binary, the target machine does not need any additional libraries or tools to run the binary.
