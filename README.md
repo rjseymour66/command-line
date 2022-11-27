@@ -3,6 +3,7 @@
 ## Todo
 
 1. How to use the `...` operator to expand a slice into a list of values (p. 40).
+2. How to test equality
 
 ## Go commands
 
@@ -19,6 +20,17 @@ Run tests:
 Build the binary:
 ```go
 $ go test -v
+```
+Add external dependencies to the project:
+```go
+$ go get github.com/entire/module/path
+```
+When you import these packages into your project:
+```go
+import (
+    "github.com/entire/module/path/v1"
+    "github.com/entire/module/path/dependcy2"
+)
 ```
 
 ## Linux stuff
@@ -62,6 +74,26 @@ Go sum records the checksum for each module in the application to ensure that ea
 ├── todo.go                 // API logic for flags
 └── todo_test.go            // unit tests
 
+```
+
+### run() function in main()
+
+Sometimes, the `main()` function runs lots of code, which makes it difficult to test. To fix this, break the `main()` function into smaller functions that you can test independently. Use the `run()` function as a coordinating function for the code that needs to run in `main()`.
+
+When you use the `run()` method strategy, you write unit tests for all the individual functions within `run()`, and you write an integration test for `run()`.
+
+## Print statements
+
+```go
+fmt.Errorf("Custom formatted error messages: %s", err)
+fmt.Fprintf(writer, "Writes this formatted string to the writer: %s", text)
+fStr := fmt.Sprintf("Returns a formatted string: %s", text)
+```
+
+## Equality
+
+```go
+bytes.Equal(bSlice1, bSlice2)
 ```
 
 ## Strings
@@ -265,6 +297,12 @@ Read data from a file with the `os` package. `ReadFile` reads the contents of a 
 os.ReadFile(filename)
 ```
 
+Extract the last element in a filepath--generally, the file--with the filepath.Base() function:
+```go
+filename := filepath.Base("/path/to/home.html")
+// filename == home.html
+```
+
 #### Scanner for lines and words
 
 The Scanner type accepts an `io.Reader` and reads data that is delimited by spaces or new lines. By default, it reads lines, but you can configure it to read words:
@@ -305,6 +343,27 @@ os.WriteFile(filename, dataToWrite, perms)
   execute: 1  
 
 When you assign permissions in an programming language, you have to tell the program that you are using the octal base. You do this by beginning the number with a `0`. So, `0644` permissions means that the file owner has read and write permissions, and the group and all other users have read permissions.
+
+#### Buffers and bytes
+
+Many functions return `[]byte`, so you might have to fill a buffer with data to return.
+
+The `bytes` package contains two types: `Buffer` and `Reader`. The `Buffer` returns a variable size buffer to read and write data. It provides `Write*` methods for `strings`, `runes`, `bytes`, etc.:
+
+```go
+func byteStuff() []bytes {
+    // compose the page using a buffer of bytes to write to a file
+    var buffer bytes.Buffer
+
+    // write html to bytes buffer
+    buffer.WriteString("The first string")
+    buffer.Write([]byte{'T', 'h', 'e', 's', 'e', 'c', 'o', 'n', 'd', 's', 't', 'r', 'i', 'n', 'g'})
+    buffer.WriteString("The last string")
+
+    // return []bytes
+    return buffer.Bytes()
+}
+```
 
 ## Flags
 
@@ -401,7 +460,7 @@ In the preceding example:
 
 # Tests
 
-## Integration tests
+#### Integration tests
 
 Integration tests test how the program behaves when interacted with from the outside world--how a user uses it. This means that you test the `main()` method.
 
@@ -413,7 +472,7 @@ Follow these general guidelines when running integration tests:
 3. Run the tests with `m.Run()`
 4. Clean up any artifacts with `os.Remove(artifactname)`
 
-## General flow
+#### General flow
 
 When you create a test, you need to set up an environment, execute the functionality that you are testing, then tear down any temporary files you created in the environment:
 
@@ -430,7 +489,7 @@ func TestMethod(t *testing.T) {
 }
 ```
 
-## Subtests with t.Run()
+#### Subtests with t.Run()
 
 Use `t.Run()`, You can run subtests within a test function. `t.Run()` accepts two parameters: the name of the test, and an unnamed test function. Nest `t.Run()` under the main func Test* function to target functionality, such as different command line options:
 
@@ -447,7 +506,7 @@ func TestMain(m *testing.M) {
 }
 ```
 
-## Packages
+#### Packages
 
 Place `*_test.go` files in the same directory as the code that you are testing. When you declare the `package` in the test file, use the original package name followed by `_test`. For example:
 
@@ -455,7 +514,7 @@ Place `*_test.go` files in the same directory as the code that you are testing. 
 package original_test
 ```
 
-## Utilities
+#### Utilities
 
 Create a temporary file if you need to test an action like deleting a file from the file system. Use `os.CreateTemp()`. Be sure to clean up with `os.Remove(tempfile.Name())`:
 
@@ -463,7 +522,7 @@ Create a temporary file if you need to test an action like deleting a file from 
 os.CreateTemp(".", )
 ```
 
-## Error handling
+#### Error handling
 
 The test object (`*testing.T`) provides the following methods troubleshoot during testing
 
@@ -476,3 +535,9 @@ t.Fatalf("Error message: %s", err) // Logf() + FailNow()
 ```go
 t.Errorf("Error message: %s", err) // Logf() + Fail()
 ```
+
+#### Strategies
+
+When testing file writes, use _goldenfiles_: files that contain the expected results and that you load during tests to validate output.
+
+> **IMPORTANT**: Put goldenfiles, and other testing files, in a directory called `testdata`. Go tooling ignores this directory when building and compiling the program.
