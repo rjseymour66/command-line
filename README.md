@@ -1,9 +1,11 @@
-# Notes
-
 ## Todo
 
 1. How to use the `...` operator to expand a slice into a list of values (p. 40).
 2. How to test equality
+
+## Find a home...
+
+- deferred function calls are not executed when `os.Exit()` is called.
 
 ## Go commands
 
@@ -85,9 +87,10 @@ When you use the `run()` method strategy, you write unit tests for all the indiv
 ## Print statements
 
 ```go
-fmt.Errorf("Custom formatted error messages: %s", err)
+fmt.Errorf("Custom formatted error messages: %s", optionalErr)
 fmt.Fprintf(writer, "Writes this formatted string to the writer: %s", text)
 fStr := fmt.Sprintf("Returns a formatted string: %s", text)
+fmt.Fprintln(io.Writer, c ...content) // writes to writer and appends newline
 ```
 
 ## Equality
@@ -165,7 +168,11 @@ func (r *Receiver) String() string {
 
 fmt.Print(*r)
 ```
+### io.Writer
 
+Common `io.Writer`s:
+- os.Stdout
+- bytes.Buffer (implements `io.Writer` as a pointer receiver, so use `&`)
 
 ## Methods
 
@@ -286,6 +293,19 @@ var jsonData := `[
 var unmarshalled []person
 
 json.Unmarshall(data, &unmarshalled)
+```
+## Files
+
+If you need to create a temp file:
+```go
+temp, err := os.CreateTemp("", "pattern*.extension")
+```
+- First parameter is the directory that you want to create the temporary file in. If it is left blank, it uses the `/tmp` directory.
+- The second parameter defines the file name. Use a `*` character to tell the program to generate a random number to make the name unique.
+
+Get the name of the file:
+```go
+name := fileName.Name()
 ```
 
 ## Reading data
@@ -427,6 +447,12 @@ zeroVal = time.Time{}
 
 ## Building commands with os/exec
 
+### Find the OS
+
+Go can compile a binary for any OS, so you should check the `runtime.GOOS` constant to determine the OS.
+
+#### Example 1
+
 Create a command that adds a task to a todo application through STDIN. For brevity, this example omits error checking in some places:
 ```go
 /* 1 */ task := "This is the task"
@@ -457,6 +483,22 @@ In the preceding example:
 6. Write the task to STDIN
 7. Run the command
 
+#### Example 2
+
+Create a slice literal to store the parameters:
+```go
+params := []string{}
+params = append(params, arg1)
+params = append(params, arg2)
+// expand slice values into function
+exec.Command(/path/, params...)
+```
+
+#### Useful exec. methods
+
+```go
+exec.LookPath(fileName string) // returns location of fileName in PATH or error
+```
 
 # Tests
 
