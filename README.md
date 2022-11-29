@@ -273,10 +273,10 @@ john := person{}
 
 > **IMPORTANT**: Always pass pointers to `json.Marshall` and `json.Unmarshall`.
 
-**Marshalling** transforms a memory representation of an object into the JSON data format for storage or transmission.
+Marshalling transforms a memory representation of an object into the JSON data format for storage or transmission.
 
 #### Unmarshalling
-**Unmarshalling** transforms a JSON object into a memory representation that is executable.
+Unmarshalling transforms a JSON object into a memory representation that is executable.
 
 To unmarshall a JSON object into memory, pass the data and a pointer to the data structure that you want to store the data in:
 ```go
