@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"flag"
 	"fmt"
 	"io"
@@ -15,10 +16,28 @@ import (
 func main() {
 
 	lines := flag.Bool("l", false, "Count lines")
+	// add file flag
+	file := flag.String("file", "", "File to read from")
 	byteCount := flag.Bool("b", false, "Count bytes")
 	flag.Parse()
 
-	fmt.Println(count(os.Stdin, *lines, *byteCount))
+	if *file == "" {
+		fmt.Println(count(os.Stdin, *lines, *byteCount))
+	} else {
+		// create buffer
+		var buffer bytes.Buffer
+		// read file into var
+		output, err := os.ReadFile(*file)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+		// write var into buffer
+		buffer.Write(output)
+		// pass buffer to count()
+		fmt.Println(count(&buffer, *lines, *byteCount))
+	}
+
 }
 
 func count(r io.Reader, countLines bool, countBytes bool) (int, int) {

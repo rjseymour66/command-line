@@ -40,9 +40,10 @@ import (
 Write to a file from with cat:
 
 ```bash
-cat << fileName >
+$ cat << EOF > filename
 # enter text
-EOF
+> EOF
+
 ```
 
 #### Cross-compilation
