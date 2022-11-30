@@ -45,7 +45,7 @@ func TestCountWordsAndBytes(t *testing.T) {
 	b := bytes.NewBufferString("word1 word2 word3 word4\n")
 
 	expWords := 4
-	expBytes := 2
+	expBytes := 20
 
 	resWords, resBytes := count(b, false, true)
 
