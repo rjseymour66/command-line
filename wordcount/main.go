@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 )
 
 /*
@@ -21,49 +22,18 @@ func main() {
 	byteCount := flag.Bool("b", false, "Count bytes")
 	flag.Parse()
 
-	l, b := count(os.Stdin, *lines, *byteCount)
-	// count lines
-	// count bytes
-	// count words and bytes
-	// read from file
-	// default is count words
-	switch {
-	case *lines:
-		fmt.Println(l)
-	case *byteCount:
-		fmt.Println(b)
-	case *lines == false && *byteCount:
-		fmt.Println(count(os.Stdin, *lines, *byteCount))
-	case *file != "":
-		// create buffer
-		var buffer bytes.Buffer
-		// read file into var
-		output, err := os.ReadFile(*file)
-		if err != nil {
-			fmt.Fprintln(os.Stderr, err)
-			os.Exit(1)
-		}
-		// write var into buffer
-		buffer.Write(output)
-		// pass buffer to count()
-		fmt.Println(count(&buffer, *lines, *byteCount))
-	}
-
 	if *file == "" {
 		fmt.Println(count(os.Stdin, *lines, *byteCount))
 	} else {
-		// create buffer
-		var buffer bytes.Buffer
-		// read file into var
-		output, err := os.ReadFile(*file)
+		fileContents, err := getFile(*file)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
-		// write var into buffer
-		buffer.Write(output)
-		// pass buffer to count()
-		fmt.Println(count(&buffer, *lines, *byteCount))
+		// create reader from string
+		output := strings.NewReader(string(fileContents))
+		// print output
+		fmt.Println(count(output, *lines, *byteCount))
 	}
 
 }
@@ -89,4 +59,17 @@ func count(r io.Reader, countLines bool, countBytes bool) (int, int) {
 		}
 	}
 	return wc, blength
+}
+
+func getFile(fileName string) ([]byte, error) {
+	// create buffer
+	var buffer bytes.Buffer
+	// read file into var
+	fileContents, err := os.ReadFile(fileName)
+	if err != nil {
+		return nil, err
+	}
+	// write var into buffer
+	buffer.Write(fileContents)
+	return buffer.Bytes(), nil
 }
