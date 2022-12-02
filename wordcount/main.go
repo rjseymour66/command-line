@@ -18,14 +18,15 @@ func main() {
 
 	lines := flag.Bool("l", false, "Count lines")
 	// add file flag
-	file := flag.String("file", "", "File to read from")
+	file := flag.String("file", "", "File(s) to read from")
 	byteCount := flag.Bool("b", false, "Count bytes")
 	flag.Parse()
 
 	if *file == "" {
 		fmt.Println(count(os.Stdin, *lines, *byteCount))
 	} else {
-		fileContents, err := getFile(*file)
+		files := flag.Args()
+		fileContents, err := getFiles(files)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
@@ -34,6 +35,7 @@ func main() {
 		output := strings.NewReader(string(fileContents))
 		// print output
 		fmt.Println(count(output, *lines, *byteCount))
+		fmt.Println(len(files))
 	}
 
 }
@@ -71,5 +73,20 @@ func getFile(fileName string) ([]byte, error) {
 	}
 	// write var into buffer
 	buffer.Write(fileContents)
+	return buffer.Bytes(), nil
+}
+
+func getFiles(fileSlice []string) ([]byte, error) {
+	// create buffer
+	var buffer bytes.Buffer
+	// iterate through slice, writing each file into buffer
+	for _, file := range fileSlice {
+		fileContents, err := os.ReadFile(file)
+		if err != nil {
+			return nil, err
+		}
+		buffer.Write(fileContents)
+	}
+	// return buffer
 	return buffer.Bytes(), nil
 }
