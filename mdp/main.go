@@ -41,6 +41,11 @@ func main() {
 	tFname := flag.String("t", "", "Alternate template name")
 	flag.Parse()
 
+	// if user did not provide a tFname and did provide an env var
+	if *tFname == "" && os.Getenv("DEFAULT_TEMPLATE") != "" {
+		*tFname = os.Getenv("DEFAULT_TEMPLATE")
+	}
+
 	// If user did not provide input file, show usage
 	if *filename == "" {
 		flag.Usage()
