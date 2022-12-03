@@ -81,20 +81,28 @@ func TestRunDeleteExtension(t *testing.T) {
 			// set the logger with testCases.cfg
 			tc.cfg.wLog = &logBuffer
 
+			// files are deleted with the ext value used in the command
+			// files that are not deleted are created but not acted upon
 			tempDir, cleanup := createTempDir(t, map[string]int{
 				tc.cfg.ext:     tc.nDelete,
 				tc.extNoDelete: tc.nNoDelete,
 			})
 			defer cleanup()
 
+			// run the tool from the tempDir, write to &buffer, and use the
+			// config in the test cases. This deletes the files associated with the
+			// cfg.ext and nDelete
 			if err := run(tempDir, &buffer, tc.cfg); err != nil {
 				t.Fatal(err)
 			}
+			// the buffer should be empty each time
 			res := buffer.String()
 			if tc.expected != res {
 				t.Errorf("Expected %q, got %q instead\n", tc.expected, res)
 			}
 
+			// the number of remaining files should equal the number that was
+			// created but not deleted
 			filesLeft, err := os.ReadDir(tempDir)
 			if err != nil {
 				t.Error(nil)
@@ -115,8 +123,10 @@ func TestRunDeleteExtension(t *testing.T) {
 	}
 }
 
-// add t to call test-related functions
-// files is a map of [filename]numOfFilesToCreate
+// creates a temp directory, then creates files that will be deleted, and
+// files that will not be deleted according to the cfg setup.
+// files is the number of files this function creates for each extension
+// returns the dir name that it creates, and a func that cleans up test artifacts
 func createTempDir(t *testing.T, files map[string]int) (dirname string, cleanup func()) {
 	t.Helper()
 	// make a temp directory in the default directory for temp files
@@ -125,12 +135,13 @@ func createTempDir(t *testing.T, files map[string]int) (dirname string, cleanup 
 		t.Fatal(err)
 	}
 
-	// k is string, n is int
 	for k, n := range files {
-		// for each number of files, write 'dummy' to "kfilename"
+		// for each number of files, write 'dummy' to "file1.log"
+		// while j is less or equal to the number of files to delete or not
 		for j := 1; j <= n; j++ {
-			fname := fmt.Sprintf("file%d%s", j, k)
-			fpath := filepath.Join(tempDir, fname)
+			fname := fmt.Sprintf("file%d%s", j, k) // fname = file1.gz
+			fpath := filepath.Join(tempDir, fname) // fpath = /tmp/walktest
+			// write "dummy" to a file
 			if err := os.WriteFile(fpath, []byte("dummy"), 0644); err != nil {
 				t.Fatal(err)
 			}
