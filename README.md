@@ -57,6 +57,14 @@ $ export VARIABLE_NAME=new-variable-name
 $ unset VARIABLE_NAME
 ```
 
+Create dirs and files quickly:
+```bash
+$ mkdir -p /tmp/testdir/{text,logs}
+$ touch /tmp/testdir/text/{text1,text2,text3}.txt
+$ touch /tmp/testdir/logs/{log1,log2,log3}.log
+
+```
+
 #### Cross-compilation
 
 Build static go binaries for operating systems that are different than the one that you are building it on. Because you build a static binary, the target machine does not need any additional libraries or tools to run the binary.
@@ -333,7 +341,10 @@ name := fileName.Name()
 
 ### Examining file metadata
 
-Use [os.FileInfo](https://pkg.go.dev/io/fs#FileInfo) to examine file metadata.
+Use [os.FileInfo](https://pkg.go.dev/io/fs#FileInfo) to examine file metadata. To return the `FileInfo` file attributes for a file, use `os.Stat(filename)`:
+```go
+info, err := os.Stat(fileName)
+```
 
 ## Reading data
 
@@ -568,6 +579,12 @@ func TestMethod(t *testing.T) {
 }
 ```
 
+#### Test helpers with t.Helper()
+
+You can defer a the cleanup function. If a helper function fails a test, Go prints the line in the test function that calls the helper function.
+
+You can also return a cleanup function to make sure that your tests leave no test artifacts in the filesystem. There is also a `t.Cleanup()` method that registers a cleanup function.
+
 #### Subtests with t.Run()
 
 Use `t.Run()`, You can run subtests within a test function. `t.Run()` accepts two parameters: the name of the test, and an unnamed test function. Nest `t.Run()` under the main func Test* function to target functionality, such as different command line options:
@@ -592,7 +609,31 @@ Place `*_test.go` files in the same directory as the code that you are testing. 
 ```go
 package original_test
 ```
+
 #### Table tests
+
+1. Define your test cases as a slice of anonymous struct that contains the data required to run your tests and the expected results
+2. Iterate over this slice with a `for range` loop
+
+Anonymous struct example:
+```go
+func TestFilterOut(t *testing.T) {
+	testCases := []struct {
+		name     string
+		file     string
+		ext      string
+		minSize  int64
+		expected bool
+	}{
+		{"FilterNoExtension", "testdata/dir.log", "", 0, false},
+		{"FilterExtensionMatch", "testdata/dir.log", ".log", 0, false},
+		{"FilterExtensionNoMatch", "testdata/dir.log", ".sh", 10, true},
+		{"FilterExtensionSizeMatch", "testdata/dir.log", ".log", 10, false},
+		{"FilterExtensionSizeNoMatch", "testdata/dir.log", ".log", 20, true},
+	}
+    ...
+}
+```
 
 #### Utilities
 
