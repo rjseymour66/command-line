@@ -182,11 +182,22 @@ fmt.Print(*r)
 ```
 ### io.Writer
 
-Common `io.Writer`s:
+Common `io.Writer`:
 - os.Stdout
 - bytes.Buffer (implements `io.Writer` as a pointer receiver, so use `&`)
 
+> Use `os.Stdout` in the program, and `bytes.Buffer` when testing.
+
 ## Methods
+
+When there are too many parameters that you want to pass to a function, create a `config` struct:
+```go
+type config struct {
+    // value type
+    // ...
+}
+```
+When you create a `config` object, assign each field the value of a CLI flag.
 
 #### Value recievers
 
@@ -319,6 +330,10 @@ Get the name of the file:
 ```go
 name := fileName.Name()
 ```
+
+### Examining file metadata
+
+Use [os.FileInfo](https://pkg.go.dev/io/fs#FileInfo) to examine file metadata.
 
 ## Reading data
 
@@ -570,13 +585,14 @@ func TestMain(m *testing.M) {
 }
 ```
 
-#### Packages
+#### Package naming
 
 Place `*_test.go` files in the same directory as the code that you are testing. When you declare the `package` in the test file, use the original package name followed by `_test`. For example:
 
 ```go
 package original_test
 ```
+#### Table tests
 
 #### Utilities
 
