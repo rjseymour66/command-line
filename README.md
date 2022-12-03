@@ -193,8 +193,9 @@ fmt.Print(*r)
 Common `io.Writer`:
 - os.Stdout
 - bytes.Buffer (implements `io.Writer` as a pointer receiver, so use `&`)
+- files (type os.File implements `io.Writer`)
 
-> Use `os.Stdout` in the program, and `bytes.Buffer` when testing.
+> Use a file or `os.Stdout` in the program, and `bytes.Buffer` when testing.
 
 ## Methods
 
@@ -344,6 +345,19 @@ name := fileName.Name()
 Use [os.FileInfo](https://pkg.go.dev/io/fs#FileInfo) to examine file metadata. To return the `FileInfo` file attributes for a file, use `os.Stat(filename)`:
 ```go
 info, err := os.Stat(fileName)
+```
+
+#### Opening a file
+
+Open a file with `os.OpenFile()`:
+```go
+f, err = os.OpenFile(*logFile, os.O_APPEND|os.O_CREATE|os.O_RDWR, 0644)
+if err != nil {
+    fmt.Fprintln(os.Stderr, err)
+    os.Exit(1)
+}
+// always defer the close
+defer f.Close()
 ```
 
 ## Reading data
@@ -546,6 +560,17 @@ exec.Command(/path/, params...)
 
 ```go
 exec.LookPath(fileName string) // returns location of fileName in PATH or error
+```
+
+# Logging
+
+Use logs to provide feedback for background processes. To create a logger, you need to create:
+- [*log.logger](https://pkg.go.dev/log#Logger) type
+- Logging destination ([w io.Writer](#interfaces))
+
+By default, Go's `log` library sends messages to STDERR, but you can configure it to write to a file. It adds the date and time to each log entry, and you can add a prefix to the string to help searchability
+```go
+
 ```
 
 # Tests
