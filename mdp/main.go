@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"flag"
 	"fmt"
@@ -46,11 +47,11 @@ func main() {
 		*tFname = os.Getenv("DEFAULT_TEMPLATE")
 	}
 
-	// If user did not provide input file, show usage
 	if *filename == "" {
 		flag.Usage()
 		os.Exit(1)
 	}
+
 	if err := run(*filename, *tFname, os.Stdout, *skipPreview); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
@@ -64,6 +65,7 @@ func run(filename string, tFname string, out io.Writer, skipPreview bool) error 
 	if err != nil {
 		return err
 	}
+
 	// convert markdown > HTML
 	htmlData, err := parseContent(input, tFname)
 	if err != nil {
@@ -172,4 +174,31 @@ func preview(fname string) error {
 	// Give browser time to open before deleting it
 	time.Sleep(2 * time.Second)
 	return err
+}
+
+// TODO
+func getFile(r io.Reader, arg string) (string, error) {
+	var file string
+	// if flag arg present
+	if arg != "" {
+		file = arg
+		return file, nil
+	}
+	// scan filename from STDIN
+	s := bufio.NewScanner(r)
+	// scan by word, not line
+	s.Split(bufio.ScanWords)
+
+	for s.Scan() {
+		// if non-EOF error
+		if err := s.Err(); err != nil {
+			return "", err
+		}
+		file = s.Text()
+
+		if len(s.Text()) == 0 {
+			return "", fmt.Errorf("Must provide file")
+		}
+	}
+	return file, nil
 }

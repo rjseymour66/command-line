@@ -1,7 +1,13 @@
 ## Todo
 
 1. How to use the `...` operator to expand a slice into a list of values (p. 40).
+   ```go
+   func getFile(r io.Reader, args ...string) {}
+   ...
+   t, err := getFile(os.Stdin, flag.Args()...) {}
+   ```
 2. How to test equality
+3. How to read from STDIN and a flag
 
 ## Find a home...
 
@@ -43,7 +49,12 @@ Write to a file from with cat:
 $ cat << EOF > filename
 # enter text
 > EOF
+```
 
+Setting and unsetting environment variables:
+```bash
+$ export VARIABLE_NAME=new-variable-name
+$ unset VARIABLE_NAME
 ```
 
 #### Cross-compilation
@@ -326,17 +337,27 @@ filename := filepath.Base("/path/to/home.html")
 
 #### Scanner for lines and words
 
-The Scanner type accepts an `io.Reader` and reads data that is delimited by spaces or new lines. By default, it reads lines, but you can configure it to read words:
+The Scanner type accepts an `io.Reader` and reads data that is delimited by spaces or new lines.
+
+By default, it reads lines, but you can configure it to read words:
 
 ```go
 scanner := bufio.NewScanner(r)
 // scan words
 scanner.Split(bufio.ScanWords)
 ```
-Use the `.Scan()` function in a loop to read lines or tokens, depending on the `.Split()` configuration:
+Use the `.Scan()` function in a for loop to read lines or tokens, depending on the `.Split()` configuration:
 ```go
-for scanner.Scan() {
-    // do something 
+for s.Scan() {
+    // if non-EOF error
+    if err := s.Err(); err != nil {
+        return "", err
+    }
+    file = s.Text()
+
+    if len(s.Text()) == 0 {
+        return "", fmt.Errorf("File cannot be blank")
+    }
 }
 ```
 
