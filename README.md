@@ -41,6 +41,100 @@ import (
 )
 ```
 
+## Basics
+
+#### Arrays
+
+```go
+var array [5]int                        // standard declaration
+array := [5]int{10, 20, 30, 40, 50}     // array literal declaration
+array := [...]int{10, 20, 30, 40, 50}   // Go finds the length based on num of elements
+array := [5]int{1: 10, 2: 20}           // initialize specific elements
+
+// pointers
+array := [5]*int{0: new(int), 1: new(int)}  // array of pointers
+array2 := [3]*string{new(string), new(string), new(string)}
+// dereference to assign values
+*array[0] = 10
+*array[1] = 20
+*array2[0] = "Red"
+*array2[1] = "Blue"
+```
+
+#### Slices
+```go
+slice := make([]string, 5)          // create a slice of strings with 5 capacity
+slice := make([]int, 3, 5)          // length 3, cap 5
+
+// Idiomatic slice literals
+slice := []int{10, 20, 30}          // slice literal
+slice := []string{99: ""}           // initialize the index that represents the length and capacity you need
+
+// nil slice is created by declaring a slice without any initialization
+var slice []int                     // nil slice
+
+// empty slice
+slice := make([]int, 3)             // empty slice with make
+slice := []int{}                    // slice literal to create empty slice of integers
+
+// Create a slice of strings.
+// Contains a length and capacity of 5 elements.
+source := []string{"Apple", "Orange", "Plum", "Banana", "Grape"}
+
+// Slice the third element and restrict the capacity.
+// Contains a length and capacity of 1 element.
+slice := source[2:3:3]
+
+// Append a new string to the slice. This doesn't change 'Banana' in the underlying array, it creates a new one
+slice = append(slice, "Kiwi")
+
+// change value of slice
+slice[1] = 25
+
+// making a slice of a slice
+slice := []int{10, 20, 30, 40, 50}
+newSlice := slice[1:3]              // length 2, cap 4. 1 is the index position of the element that the new slice starts with
+// Length:   3 - 1 = 2
+// Capacity: 5 - 1 = 4
+
+// append
+newSlice = append(newSlice, 60)
+
+// Slice the third element and restrict the capacity.
+// Contains a length of 1 element and capacity of 2 elements.
+slice := source[2:3:4]
+```
+Variadic slices:
+```go
+s1 := []int{1, 2}
+s2 := []int{3, 4}
+
+// Append the two slices together and display the results.
+fmt.Printf("%v\n", append(s1, s2...))
+
+Output:
+[1 2 3 4]
+```
+#### Maps
+
+```go
+// create with make
+dict := make(map[string]int)
+
+// create and initialize as a literal IDIOTMATIC
+dict := map[string]string{"Red": "#da1337", "Orange": "#e95a22"}
+
+// slice as the value
+dict := map[int]string{}
+
+// assigning values with a map literal
+colors := map[string]string{}
+colors["Red"] = "#da137"
+
+// DO NOT create nil maps, they result in a compile error
+var colors map[string]string{}
+```
+
 ## Linux stuff
 
 Write to a file from with cat:
@@ -69,7 +163,20 @@ Creating `cron` job:
 $ crontab -e # opens visual editor
 $ 
 ```
+Switch back to the previous working directory:
+```bash
+$ cd -
+```
 
+View compressed file info: 
+```bash
+$ gzip -l *
+         compressed        uncompressed  ratio uncompressed_name
+               1229                3047  61.1% experiment_toolid_test.go
+               1021                2106  53.3% overlaydir_test.go
+                696                1320  49.8% reboot_test.go
+               2946                6473  55.0% (totals)
+```
 #### Cross-compilation
 
 Build static go binaries for operating systems that are different than the one that you are building it on. Because you build a static binary, the target machine does not need any additional libraries or tools to run the binary.
