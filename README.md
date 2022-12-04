@@ -43,6 +43,17 @@ import (
 
 ## Basics
 
+#### Formatting verbs
+
+[Formatting verbs](https://pkg.go.dev/fmt#hdr-Printing)
+
+For errors, use `%w` to decorate the original error with additional information for the users. Essentially, you can customize the error message while also returning the default Go error:
+```go
+if err != nil {
+    return nil, fmt.Errorf("Cannot read data from file: %w", err)
+}
+```
+
 #### Arrays
 
 ```go
@@ -210,7 +221,7 @@ Go sum records the checksum for each module in the application to ensure that ea
 
 ```
 
-### run() function in main()
+#### run() function in main()
 
 Sometimes, the `main()` function runs lots of code, which makes it difficult to test. To fix this, break the `main()` function into smaller functions that you can test independently. Use the `run()` function as a coordinating function for the code that needs to run in `main()`.
 
@@ -309,7 +320,7 @@ fmt.Print(*r)
 ```
 ### io.Writer
 
-Common `io.Writer`:
+Commonly named `w` or `out`. Examples of `io.Writer`:
 - os.Stdout
 - bytes.Buffer (implements `io.Writer` as a pointer receiver, so use `&`)
 - files (type os.File implements `io.Writer`)
@@ -388,6 +399,18 @@ func concatInput(args ...string) {
 ```
 
 ## Errors
+
+Create custom errors in the `errors.go` file. You can use these errors during error handling instead of using error strings. Essentially, you are wrapping errors with additional messages to provide more information for the user while keeping the original error available for inspection (usually during tests) with `errors.Is(err)`.
+
+Custom errors use the format `Err*`:
+```go
+var (
+	ErrNotNumber        = errors.New("Data is not numeric")
+	ErrInvalidColumn    = errors.New("Invalid column number")
+	ErrNoFiles          = errors.New("No input files")
+	ErrInvalidOperation = errors.New("Invalid operation")
+)
+```
 
 `fmt.Errorf` creates a custom formatted error:
 ```go
@@ -565,6 +588,55 @@ for scanner.Scan() {
     byteLength += len(scanner.Bytes())    
 }
 ```
+#### Reading CSV data
+
+Create a `.NewReader()` the same way that you create a `.NewScanner()` and read with the following methods:
+- `.Read()` returns a `[]string` that represents a row.
+- `.ReadAll()` returns a `[][]string`, where each slice is a row in the CSV file. 
+
+Below is an example that reads an entire CSV file and tries to convert the values to `float64`:
+```go
+func csv2float(r io.Reader, column int) ([]float64, error) {
+	// Create the CSV Reader used to read in data from CSV files
+	cr := csv.NewReader(r)
+	// adjusting column arg for 0-based index
+	column--
+	// Read in all CSV data
+	allData, err := cr.ReadAll()
+	if err != nil {
+		return nil, fmt.Errorf("Cannot read data from file: %w", err)
+	}
+
+	var data []float64
+	/*
+		convert [][]string to [][]float64
+	*/
+
+	// loop through all records
+	for i, row := range allData {
+		// skip the first row that contains the column headers
+		if i == 0 {
+			continue
+		}
+		// Checking number of cols in CSV file to verify flag value
+		if len(row) <= column {
+			// file does not have that many columns
+			return nil,
+				fmt.Errorf("%w: File has only %d columns", ErrInvalidColumn, len(row))
+		}
+		// Try to convert data read into a float number
+		v, err := strconv.ParseFloat(row[column], 64)
+		if err != nil {
+			return nil, fmt.Errorf("%w: %s", ErrNotNumber, err)
+		}
+
+		data = append(data, v)
+	}
+	return data, nil
+}
+```
+
+
 ## Writing data
 
 #### Writing to a file
@@ -740,6 +812,8 @@ l := log.New(io.Writer, "LOGGER PREFIX: ", log.LstdFlags)
 log.LstdFlags uses the default log flags, such as date and time.
 
 # Tests
+
+`iotest.TimeoutReader(r)` simulates a reading failure and returns a timeout error.
 
 #### Integration tests
 
