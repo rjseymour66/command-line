@@ -62,7 +62,12 @@ Create dirs and files quickly:
 $ mkdir -p /tmp/testdir/{text,logs}
 $ touch /tmp/testdir/text/{text1,text2,text3}.txt
 $ touch /tmp/testdir/logs/{log1,log2,log3}.log
+```
 
+Creating `cron` job:
+```bash
+$ crontab -e # opens visual editor
+$ 
 ```
 
 #### Cross-compilation
@@ -135,6 +140,13 @@ if err != nil {
 ```
 This command seems to be used a lot with the `exec.Command` `os/exec` package?
 
+`.TrimSpace()` removes whitespace, `\n`, `\t`:
+```go
+func main() {
+	fmt.Println(strings.TrimSpace(" \t\n Hello, Gophers \n\t\r\n"))
+}
+```
+
 ## Pointers
 
 `*` either declares a pointer variable or dereferences a pointer. Dereferencing is basically following a pointer to the address and retrieving stored value.
@@ -194,8 +206,43 @@ Common `io.Writer`:
 - os.Stdout
 - bytes.Buffer (implements `io.Writer` as a pointer receiver, so use `&`)
 - files (type os.File implements `io.Writer`)
+- gzip.Writer
 
 > Use a file or `os.Stdout` in the program, and `bytes.Buffer` when testing.
+
+GZIP writer example:
+```go
+// open or create file at targetPath
+// rwxrxrx
+out, err := os.OpenFile(targetPath, os.O_RDWR|os.O_CREATE, 0755)
+if err != nil {
+    return err
+}
+defer out.Close()
+
+// open file w contents to zip
+in, err := os.Open(path)
+if err != nil {
+    return err
+}
+defer in.Close()
+
+// create new zip writer
+zw := gzip.NewWriter(out)
+zw.Name = filepath.Base(path)
+
+// copy contents
+if _, err = io.Copy(zw, in); err != nil {
+    return err
+}
+
+// close zip writer
+if err := zw.Close(); err != nil {
+    return err
+}
+// returns an error on fail
+return out.Close()
+```
 
 ## Methods
 
@@ -447,6 +494,17 @@ func byteStuff() []bytes {
 }
 ```
 
+## Filesystem
+
+The `filepath` library creates cross-platform filepaths--they compile correctly for each supported OS.
+
+Get the relative directory path between a root and target path:
+```go
+relDir, err := filepath.Rel(root, filepath.Dir(path))
+if err ...
+```
+
+
 ## Flags
 
 `flag.<FunctionName>` lets you define CLI flags. For example, to create a flag that performs an action if the flag is provided, you can use `flag.Bool`.
@@ -570,8 +628,9 @@ Use logs to provide feedback for background processes. To create a logger, you n
 
 By default, Go's `log` library sends messages to STDERR, but you can configure it to write to a file. It adds the date and time to each log entry, and you can add a prefix to the string to help searchability
 ```go
-
+l := log.New(io.Writer, "LOGGER PREFIX: ", log.LstdFlags)
 ```
+log.LstdFlags uses the default log flags, such as date and time.
 
 # Tests
 
