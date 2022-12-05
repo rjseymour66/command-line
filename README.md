@@ -9,6 +9,94 @@
 2. How to test equality
 3. How to read from STDIN and a flag
 
+## Linux stuff
+
+Write to a file from with cat:
+
+```bash
+$ cat << EOF > filename
+# enter text
+> EOF
+```
+
+Setting and unsetting environment variables:
+```bash
+$ export VARIABLE_NAME=new-variable-name
+$ unset VARIABLE_NAME
+```
+
+Create dirs and files quickly:
+```bash
+$ mkdir -p /tmp/testdir/{text,logs}
+$ touch /tmp/testdir/text/{text1,text2,text3}.txt
+$ touch /tmp/testdir/logs/{log1,log2,log3}.log
+```
+
+Creating `cron` job:
+```bash
+$ crontab -e # opens visual editor
+$ 
+```
+Switch back to the previous working directory:
+```bash
+$ cd -
+```
+
+
+`time` executes an application and logs to the console how long it takes to run:
+```bash
+$ time ./colstats -op avg -col 3 testdata/example.csv testdata/example2.csv 
+233.84
+
+real	0m0.005s
+user	0m0.006s
+sys	0m0.000s
+```
+In the preceding example, `real` shows the total elapsed time.
+
+The `tee` command logs command output to STDOUT and writes it to a file:
+```
+$ go test -bench . -benchtime=10x -run ^$ | tee benchresults00.txt
+goos: linux
+goarch: amd64
+pkg: colstats
+cpu: Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz
+BenchmarkRun-12    	      10	 546183149 ns/op
+PASS
+ok  	colstats	6.067s
+
+$ cat benchresults00.txt 
+goos: linux
+goarch: amd64
+pkg: colstats
+cpu: Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz
+BenchmarkRun-12    	      10	 546183149 ns/op
+PASS
+ok  	colstats	6.067s
+```
+
+#### Compressed files
+
+Unzip `.zip` files with `unzip`. Do not include a directory if you want to unzip it to the current working directory:
+```bash
+$ unzip file.zip -p /unzip/to/this/dir
+```
+
+Extract contents of a tar file with `tar`:
+```bash
+$ tar -xzvf filename.tar.gz -C targetDir/
+```
+
+View compressed file info: 
+```bash
+$ gzip -l *
+         compressed        uncompressed  ratio uncompressed_name
+               1229                3047  61.1% experiment_toolid_test.go
+               1021                2106  53.3% overlaydir_test.go
+                696                1320  49.8% reboot_test.go
+               2946                6473  55.0% (totals)
+```
+
 ## Find a home...
 
 - deferred function calls are not executed when `os.Exit()` is called.
@@ -146,48 +234,7 @@ colors["Red"] = "#da137"
 var colors map[string]string{}
 ```
 
-## Linux stuff
 
-Write to a file from with cat:
-
-```bash
-$ cat << EOF > filename
-# enter text
-> EOF
-```
-
-Setting and unsetting environment variables:
-```bash
-$ export VARIABLE_NAME=new-variable-name
-$ unset VARIABLE_NAME
-```
-
-Create dirs and files quickly:
-```bash
-$ mkdir -p /tmp/testdir/{text,logs}
-$ touch /tmp/testdir/text/{text1,text2,text3}.txt
-$ touch /tmp/testdir/logs/{log1,log2,log3}.log
-```
-
-Creating `cron` job:
-```bash
-$ crontab -e # opens visual editor
-$ 
-```
-Switch back to the previous working directory:
-```bash
-$ cd -
-```
-
-View compressed file info: 
-```bash
-$ gzip -l *
-         compressed        uncompressed  ratio uncompressed_name
-               1229                3047  61.1% experiment_toolid_test.go
-               1021                2106  53.3% overlaydir_test.go
-                696                1320  49.8% reboot_test.go
-               2946                6473  55.0% (totals)
-```
 #### Cross-compilation
 
 Build static go binaries for operating systems that are different than the one that you are building it on. Because you build a static binary, the target machine does not need any additional libraries or tools to run the binary.
@@ -400,7 +447,7 @@ func concatInput(args ...string) {
 
 ## Errors
 
-Create custom errors in the `errors.go` file. You can use these errors during error handling instead of using error strings. Essentially, you are wrapping errors with additional messages to provide more information for the user while keeping the original error available for inspection (usually during tests) with `errors.Is(err)`.
+Create custom errors in the `errors.go` file. You can use these errors during error handling instead of using error strings. Essentially, you are wrapping errors with additional messages to provide more information for the user while keeping the original error available for inspection (usually during tests) with `errors.Is(err, expectedErr)`.
 
 Custom errors use the format `Err*`:
 ```go
@@ -950,3 +997,75 @@ Templates can write dynamic webpages, config files, emails, etc. These are the g
     }
     ```
 4. Return or use the buffer somehow.
+
+## Benchmarking
+
+Running Go benchmarks is similar to running tests:
+1. Write the benchmark functions using the `testing.B` type.
+2. Run the benchmarks using the `go test` tool with the `-bench` parameter.
+
+You want to benchmark your tool according to the main use case, so create test files to replicate your workload.
+
+
+#### Example benchmark function
+
+The following benchmark test runs a tool on all CSV test files:
+```go
+func BenchmarkRun(b *testing.B) {
+	filenames, err := filepath.Glob("./testdata/benchmark/*.csv")
+	if err != nil {
+		b.Fatal(err)
+	}
+
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		if err := run(filenames, "avg", 2, io.Discard); err != nil {
+			b.Error(err)
+		}
+	}
+}
+```
+In the preceding example:
+- `filepath.Glob()` matches a pattern to find all files with the `.cvs` file extension.
+- `b.ResetTimer()` resets the benchmark clock. This ignores any time used to prepare for the benchmark's execution.
+- `b.N` is the upper limit of the loop, which is adjusted to last about one second.
+- `io.Discard` implements the `io.Writer` interface, but does not write output to any resource.
+
+#### Benchmark run commands
+
+Run the benchmark tool with the `-bench <regex>` parameter, where `regex` is a regular expression that matches the benchmark tests that you want to run. To skip regular tests in the test files, include `-run ^$` in the command. For example:
+```go
+$ go test -bench . -run ^$
+goos: linux
+goarch: amd64
+pkg: colstats
+cpu: Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz
+BenchmarkRun-12    	       2	 543565503 ns/op
+PASS
+ok  	colstats	1.588s
+```
+Run additional executions of the benchmark test with the `-benchtime` parameter. This parameter accepts a duration in time to run the benchmark, or a fixed number of executions. 
+
+Run and save benchmarks to a file with the `tee` command. For example:
+```
+$ go test -bench . -benchtime=10x -run ^$ | tee benchresults00.txt
+goos: linux
+goarch: amd64
+pkg: colstats
+cpu: Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz
+BenchmarkRun-12    	      10	 546183149 ns/op
+PASS
+ok  	colstats	6.067s
+
+$ cat benchresults00.txt 
+goos: linux
+goarch: amd64
+pkg: colstats
+cpu: Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz
+BenchmarkRun-12    	      10	 546183149 ns/op
+PASS
+ok  	colstats	6.067s
+```
+
+## Profiling
