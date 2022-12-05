@@ -1188,3 +1188,58 @@ To view a relationship graph in a browser, use the `web` command:
 (pprof) web
 (pprof) quit
 ```
+#### Memory profiling
+
+This is similar to running a benchmark, but use the `-memprofile` option:
+```go
+$ go test -bench . -benchtime=10x -run ^$ -memprofile mem00.pprof
+goos: linux
+goarch: amd64
+pkg: colstats
+cpu: Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz
+BenchmarkRun-12    	      10	 551000648 ns/op
+PASS
+ok  	colstats	6.049s
+```
+This command creates the `mem00.pprof` file in your current working directory.
+
+View the results of the memory profile with `go tool pprof` and the `-alloc_space` option:
+```go
+$ go tool pprof -alloc_space mem00.pprof
+File: colstats.test
+Type: alloc_space
+Time: Dec 5, 2022 at 12:35am (EST)
+Entering interactive mode (type "help" for commands, "o" for options)
+```
+Use the `top` command with the and sort with the `-cum` flag to view the parts of the program that allocate the most memory:
+```go
+(pprof) top -cum
+Showing nodes accounting for 5.10GB, 99.89% of 5.10GB total
+Dropped 28 nodes (cum <= 0.03GB)
+Showing top 10 nodes out of 11
+      flat  flat%   sum%        cum   cum%
+         0     0%     0%     5.10GB 99.92%  colstats.BenchmarkRun
+    1.13GB 22.23% 22.23%     5.10GB 99.92%  colstats.run
+         0     0% 22.23%     5.10GB 99.92%  testing.(*B).runN
+         0     0% 22.23%     4.64GB 90.89%  testing.(*B).launch
+    0.64GB 12.50% 34.73%     3.96GB 77.66%  colstats.csv2float
+    2.05GB 40.11% 74.84%     3.29GB 64.43%  encoding/csv.(*Reader).ReadAll
+    1.24GB 24.32% 99.16%     1.24GB 24.32%  encoding/csv.(*Reader).readRecord
+         0     0% 99.16%     0.46GB  9.03%  testing.(*B).run1.func1
+         0     0% 99.16%     0.04GB  0.74%  bufio.NewReader (inline)
+    0.04GB  0.74% 99.89%     0.04GB  0.74%  bufio.NewReaderSize (inline)
+(pprof) 
+```
+#### Total memory allocation
+
+Use the -benchmem flag to view the total memory allocation for a program. The following command uses `tee` to send the output to STDOUT and the file parameter:
+```go
+$ go test -bench . -benchtime=10x -run ^$ -benchmem | tee benchresults00m.txt
+goos: linux
+goarch: amd64
+pkg: colstats
+cpu: Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz
+BenchmarkRun-12    	      10	 530825085 ns/op	495567618 B/op	 5041035 allocs/op
+PASS
+ok  	colstats	5.837s
+```
