@@ -1332,7 +1332,7 @@ Create the following channels:
 - filesCh is the queue. Add files for processing to this channel. The worker gorouties take files from this channel and process them.
 
 ```go
-    resultCh := make(chan []float64)
+    resCh := make(chan []float64)
     errCh    := make(chan error)
     doneCh   := make(chan struct{})
     filesCh  := make(chan string)
@@ -1342,7 +1342,7 @@ Create the WaitGroup:
 ```go
     wg := sync.WaitGroup{}
 ```
-Create a goroutine that sends files into the filesCh queue:
+Create a goroutine that sends files into the filesCh queue. This function runs independently of the `main()` function, but it is not doing any work in the queue. So, you don't have to increase or decrease the wg counter:
 ```go
     go func() {
         // close the channel at the end because there is no more work to do
@@ -1352,7 +1352,9 @@ Create a goroutine that sends files into the filesCh queue:
         }
     }()
 ```
-Now, create a loop that creates a goroutine for each available CPU on the host machine. Use the `runtime.NumCPU()` function to do this:
+Now, process the work in the queue. Create a loop that creates a goroutine for each available CPU (worker) on the host machine with `runtime.NumCPU()`. Each loop adds 1 to the WaitGroup counter.
+
+Each goroutine will process files in `filesCh` and either add the processed data to the `resCh` or add the error to the `errCh`. When there are no more files in the fileCh, the goroutine completes and decrements the WaitGroup counter by 1.
 
 ```go
 for i := 0; i < runtime.NumCPU(); i++ {
@@ -1389,7 +1391,7 @@ for i := 0; i < runtime.NumCPU(); i++ {
 }
 ```
 
-After you assign all the work, you have to close the goroutines:
+The work is not complete until the `doneCh` sends a signal. Add the `wg.Wait()` function to block until all goroutines are completed, then close `doneCh`:
 ```go
     go func() {
         // block until the WaitGroup counter is 0
@@ -1401,15 +1403,14 @@ After you assign all the work, you have to close the goroutines:
 
 Now, all of the goroutines are completed, and you are back in the `main()` function (the main goroutine). Coordinate the channels with the `select` statement:
 
+The select statement is similar to a switch statement. It blocks execution of the program until something happens with one of the channels. This statement:
+    - returns any error and breaks out of the loop
+    - adds converted data to the consolidate channel
+    - writes the data when the work is done
+
 ```go
     // create an infinte loop to accept values from the channels
 	for {
-        /*
-            The select statement is similar to a switch statement. It blocks execution of the program until something happens with one of the channels. This statement:
-                - returns any error and breaks out of the loop
-                - adds converted data to the consolidate channel
-                - writes the data when the work is done
-        */
 		select {
 		case err := <-errCh:
 			return err
