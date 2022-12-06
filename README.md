@@ -1404,9 +1404,9 @@ The work is not complete until the `doneCh` sends a signal. Add the `wg.Wait()` 
 Now, all of the goroutines are completed, and you are back in the `main()` function (the main goroutine). Coordinate the channels with the `select` statement:
 
 The select statement is similar to a switch statement. It blocks execution of the program until something happens with one of the channels. This statement:
-    - returns any error and breaks out of the loop
-    - adds converted data to the consolidate channel
-    - writes the data when the work is done
+- returns any error and breaks out of the loop
+- adds converted data to the consolidate channel
+- writes the data when the work is done
 
 ```go
     // create an infinte loop to accept values from the channels
