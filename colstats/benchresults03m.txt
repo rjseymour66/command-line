@@ -1,0 +1,7 @@
+goos: linux
+goarch: amd64
+pkg: colstats
+cpu: Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz
+BenchmarkRun-12    	      10	 166872653 ns/op	495579392 B/op	 5041118 allocs/op
+PASS
+ok  	colstats	1.835s

@@ -1067,6 +1067,10 @@ BenchmarkRun-12    	      10	 546183149 ns/op
 PASS
 ok  	colstats	6.067s
 ```
+Compare two benchmark files to measure improvements after optimizations:
+```go
+
+```
 
 ## Profiling tools
 
@@ -1242,4 +1246,178 @@ cpu: Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz
 BenchmarkRun-12    	      10	 530825085 ns/op	495567618 B/op	 5041035 allocs/op
 PASS
 ok  	colstats	5.837s
+```
+
+#### Tracing
+
+Tracing shows you how your application manages resources, such as network connections or file reads. 
+
+Add the `-trace` option to the benchmark command:
+
+```go
+$ go test -bench . -benchtime=10x -run ^$ -trace trace01.out
+goos: linux
+goarch: amd64
+pkg: colstats
+cpu: Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz
+BenchmarkRun-12    	      10	 571258799 ns/op
+PASS
+ok  	colstats	6.253s
+```
+
+View the results with `go tool trace`. The following command opens the contents of the trace file on a random port in the browser:
+
+```go
+$ go tool trace trace01.out 
+2022/12/05 18:48:49 Parsing trace...
+2022/12/05 18:48:50 Splitting trace...
+2022/12/05 18:48:51 Opening browser. Trace viewer is listening on http://127.0.0.1:46209
+```
+## Concurrency
+
+Go provides two strategies that maintain data integrity when you are writing concurrent programs:
+- Locks, such as Mutex
+- goroutines and channels
+
+#### Channels
+
+Channels allow goroutines to communicate with each other.
+
+```go
+// create a channel with make
+ch := make(chan type)
+// Use an empty struct to create a channel for done. done channels
+// only signal that processing is complete, and an empty struct does not allocate
+// any memory
+done := make(chan struct{})
+```
+
+#### WaitGroups
+
+A WaitGroup is a mechanism that coordinates the goroutine execution. When you create a goroutine, add 1 to the WaitGroup. When a goroutine finishes, subtract 1 from the WaitGroup. Use `Wait()` to wait until all goroutines are finished so you can complete execution.
+
+```go
+wg := sync.WaitGroup{}
+```
+
+#### Scheduling contention and worker queues
+
+This is when you create too many goroutines and they compete for work. The answer is to use worker queues.
+
+When using worker queues, you create one goroutine per available CPU, and have another goroutine send jobs to be executed by the workers. So, the CPUs are the workers.
+
+Use `runtime.NumCPU()` to determine the number of available CPUs:
+```go
+
+```
+
+#### Goroutines
+
+Goroutines are usually anonymous functions that follow the keyword `go`, so that they run independently of the `main()` function. Because they run independently of the `main()` function, go uses `WaitGroups`, a mechanism that blocks the `main()` method until all goroutines complete.
+
+The following worker queue example reads numbers from a file, and converts them from type string to float64. The containing function has this signature:
+
+```go
+func process(filenames []string, operation string, column int, out io.Writer)
+```
+
+When using worker queues, you create one goroutine per available CPU, and have another goroutine send jobs to be executed by the workers. So, the CPUs are the workers.
+
+First, create your channels. The channels allow goroutines to communicate without using locking mechanisms, such as mutexes.
+
+Create the following channels:
+- resultCh for the processed float64
+- errCh for errors
+- doneCh as the signal channel, a Go idiom. The done channel is of type empty struct because its only purpose is to let us know when the work is complete. Use an empty struct because it does not allocate memory
+- filesCh is the queue. Add files for processing to this channel. The worker gorouties take files from this channel and process them.
+
+```go
+    resultCh := make(chan []float64)
+    errCh    := make(chan error)
+    doneCh   := make(chan struct{})
+    filesCh  := make(chan string)
+```
+Create the WaitGroup:
+
+```go
+    wg := sync.WaitGroup{}
+```
+Create a goroutine that sends files into the filesCh queue:
+```go
+    go func() {
+        // close the channel at the end because there is no more work to do
+        defer close(fileCh)
+        for _, fname := range filenames {
+            filesCh <- fname
+        }
+    }()
+```
+Now, create a loop that creates a goroutine for each available CPU on the host machine. Use the `runtime.NumCPU()` function to do this:
+
+```go
+for i := 0; i < runtime.NumCPU(); i++ {
+    // During each iteration, add a goroutine to the WaitGroup{}
+    wg.Add(1)
+    go func() {
+        // decrement the wg counter
+        defer wg.Done()
+        // for range on a channel.
+        // for every item in this channel, do {...}
+        for fname := range filesCh {
+            // Open the file for reading
+            f, err := os.Open(fname)
+            if err != nil {
+                // Send errors into the error channel
+                errCh <- fmt.Errorf("Cannot open file: %w", err)
+                return
+            }
+
+            // Parse the CSV into a slice of float64 numbers
+            data, err := csv2float(f, column)
+            if err != nil {
+                errCh <- err
+            }
+
+            if err := f.Close(); err != nil {
+                errCh <- err
+            }
+            // if the string was converted to float64, send it to 
+            // the results channel
+            resCh <- data
+        }
+    }()
+}
+```
+
+After you assign all the work, you have to close the goroutines:
+```go
+    go func() {
+        // block until the WaitGroup counter is 0
+        wg.Wait()
+        // close() indicates that no more values will be sent
+        close(doneCh)
+    }()
+```
+
+Now, all of the goroutines are completed, and you are back in the `main()` function (the main goroutine). Coordinate the channels with the `select` statement:
+
+```go
+    // create an infinte loop to accept values from the channels
+	for {
+        /*
+            The select statement is similar to a switch statement. It blocks execution of the program until something happens with one of the channels. This statement:
+                - returns any error and breaks out of the loop
+                - adds converted data to the consolidate channel
+                - writes the data when the work is done
+        */
+		select {
+		case err := <-errCh:
+			return err
+		case data := <-resCh:
+			consolidate = append(consolidate, data...)
+		case <-doneCh:
+			_, err := fmt.Fprintln(out, opFunc(consolidate))
+			return err
+		}
+	}
 ```
