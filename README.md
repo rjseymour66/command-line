@@ -1352,9 +1352,9 @@ Create a goroutine that sends files into the filesCh queue. This function runs i
         }
     }()
 ```
-Now, process the work in the queue. Create a loop that creates a goroutine for each available CPU (worker) on the host machine with `runtime.NumCPU()`. Each loop adds 1 to the WaitGroup counter.
+Now, process the work in the queue. Create a loop that creates a goroutine for each available CPU (worker) on the host machine with `runtime.NumCPU()`. Each loop adds 1 to the WaitGroup counter. So there is 1 WaitGroup per goroutine, and 1 goroutine per CPU.
 
-Each goroutine will process files in `filesCh` and either add the processed data to the `resCh` or add the error to the `errCh`. When there are no more files in the fileCh, the goroutine completes and decrements the WaitGroup counter by 1.
+Each goroutine processes files in `filesCh` and either adds the processed data to the `resCh` or adds the error to the `errCh`. When there are no more files in `fileCh`, the goroutine completes and decrements the WaitGroup counter by 1.
 
 ```go
 for i := 0; i < runtime.NumCPU(); i++ {
