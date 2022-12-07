@@ -2,8 +2,10 @@
 
 1. How to use the `...` operator to expand a slice into a list of values (p. 40).
    ```go
+   // accepts any variable number of string args
    func getFile(r io.Reader, args ...string) {}
    ...
+   // the ... operator expands a slice into a list of values
    t, err := getFile(os.Stdin, flag.Args()...) {}
    ```
 2. How to test equality
@@ -270,7 +272,7 @@ Go sum records the checksum for each module in the application to ensure that ea
 
 #### run() function in main()
 
-Sometimes, the `main()` function runs lots of code, which makes it difficult to test. To fix this, break the `main()` function into smaller functions that you can test independently. Use the `run()` function as a coordinating function for the code that needs to run in `main()`.
+If you use the `main()` function to run all of the code, it is difficult to create integration tests. To fix this, break the `main()` function into smaller functions that you can test independently. Use the `run()` function as a coordinating function for the code that needs to run in `main()`. So, the `main()` function parses command line flags and calls the `run()` function.
 
 When you use the `run()` method strategy, you write unit tests for all the individual functions within `run()`, and you write an integration test for `run()`.
 
@@ -796,6 +798,20 @@ zeroVal = time.Time{}
 ### Find the OS
 
 Go can compile a binary for any OS, so you should check the `runtime.GOOS` constant to determine the OS.
+
+Use the `Cmd` type to build external commands to execute in your program. The `exec.Command()` function takes the name of the executable program as the first argument and zero or more arguments that will be passed to the executable during execution:
+```go
+// define the arguments for the command
+args := []string{"build", ".", "errors"}
+// create the command with the executable and args
+cmd := exec.Command("go", args...)
+// set the directory for the external command exection
+cmd.Dir = proj
+// execute the command with .Run()
+if err cmd.Run(); err != nil {
+    return fmt.Errorf("'go build' failed: %s", err)
+}
+```
 
 #### Example 1
 
