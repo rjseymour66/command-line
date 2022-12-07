@@ -1,13 +1,6 @@
 ## Todo
 
-1. How to use the `...` operator to expand a slice into a list of values (p. 40).
-   ```go
-   // accepts any variable number of string args
-   func getFile(r io.Reader, args ...string) {}
-   ...
-   // the ... operator expands a slice into a list of values
-   t, err := getFile(os.Stdin, flag.Args()...) {}
-   ```
+1. Comma ok idiom
 2. How to test equality
 3. How to read from STDIN and a flag
 
@@ -32,6 +25,11 @@ Create dirs and files quickly:
 $ mkdir -p /tmp/testdir/{text,logs}
 $ touch /tmp/testdir/text/{text1,text2,text3}.txt
 $ touch /tmp/testdir/logs/{log1,log2,log3}.log
+```
+
+Copy multiple files from a directory: 
+```bash
+$ cp ../tool/{add.go,go.mod} .
 ```
 
 Creating `cron` job:
@@ -109,6 +107,10 @@ Format code:
 ```go
 $ go -w <file>.go
 ```
+Verify that you can build the file. Execute this from the directory with the `.go` files:
+```go
+$ go build
+```
 Build the binary:
 ```go
 $ go build // uses module name for binary name
@@ -163,6 +165,17 @@ array2 := [3]*string{new(string), new(string), new(string)}
 ```
 
 #### Slices
+
+Use the `...` operator to expand a slice into a list of values:
+
+```go
+// accepts any variable number of string args
+func getFile(r io.Reader, args ...string) {}
+...
+// the ... operator expands a slice into a list of values
+t, err := getFile(os.Stdin, flag.Args()...) {}
+```
+
 ```go
 slice := make([]string, 5)          // create a slice of strings with 5 capacity
 slice := make([]int, 3, 5)          // length 3, cap 5
@@ -283,6 +296,13 @@ fmt.Errorf("Custom formatted error messages: %s", optionalErr)
 fmt.Fprintf(writer, "Writes this formatted string to the writer: %s", text)
 fStr := fmt.Sprintf("Returns a formatted string: %s", text)
 fmt.Fprintln(io.Writer, c ...content) // writes to writer and appends newline
+```
+If a function returns a `string`, you can return `fmt.Sprintf("Return this string")`:
+```go
+func (s *stepErr) Error() string {
+	return fmt.Sprintf("Step: %q: %s: Cause: %v", s.step, s.msg, s.cause)
+}
+
 ```
 
 ## Equality
@@ -476,6 +496,10 @@ if err != nil {
     return err
 }
 ```
+
+#### Custom error types
+
+
 
 #### Compact error checking
 
