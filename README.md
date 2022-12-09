@@ -1,5 +1,20 @@
 ## Todo
 
+0. How to instantiate each type:
+    - pointers
+    - structs
+    - functions
+    - container types:
+        - arrays
+        - slice
+        - maps
+    - channels
+    - interfaces
+  Instantiation methods:
+    - standard declaration
+    - literal
+    - 
+
 1. Comma ok idiom
 2. How to structure custom errors (see goci)
 3. How to test equality
@@ -118,8 +133,8 @@ $ go build // uses module name for binary name
 $ go build -o <binary-name>
 ```
 Run tests:
-Build the binary:
 ```go
+// verbose output
 $ go test -v
 ```
 Add external dependencies to the project:

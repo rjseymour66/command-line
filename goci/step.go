@@ -15,8 +15,8 @@ func newStep(name, exe, message, proj string, args []string) step {
 		name:    name,
 		exe:     exe,
 		message: message,
-		args:    args,
 		proj:    proj,
+		args:    args,
 	}
 }
 

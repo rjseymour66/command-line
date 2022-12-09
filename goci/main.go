@@ -23,7 +23,8 @@ func run(proj string, out io.Writer) error {
 	}
 
 	// create the pipeline
-	pipeline := make([]step, 1)
+	pipeline := make([]step, 2)
+
 	// create a step
 	pipeline[0] = newStep(
 		"go build",
@@ -33,6 +34,13 @@ func run(proj string, out io.Writer) error {
 		[]string{"build", ".", "errors"},
 	)
 
+	pipeline[1] = newStep(
+		"go test",
+		"go",
+		"Go Test: SUCCESS",
+		proj,
+		[]string{"test", "-v"},
+	)
 	// loop through steps and execute
 	for _, s := range pipeline {
 		msg, err := s.execute()
