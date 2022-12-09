@@ -1,8 +1,9 @@
 ## Todo
 
 1. Comma ok idiom
-2. How to test equality
-3. How to read from STDIN and a flag
+2. How to structure custom errors (see goci)
+3. How to test equality
+4. How to read from STDIN and a flag
 
 ## Linux stuff
 
@@ -432,6 +433,24 @@ return out.Close()
 ```
 
 ## Methods
+
+#### Constructors
+
+Go doesn't have constructor methods, but it is a good idea to create them so that users instantiate structs correctly.
+
+Always prepend constructor names with `[Nn]ew*`. For example, the following constructor creates a new step in a processing pipeline:
+
+```go
+func newStep(name, exe, message, proj string, args []string) step {
+	return step{
+		name:    name,
+		exe:     exe,
+		message: message,
+		args:    args,
+		proj:    proj,
+	}
+}
+```
 
 When there are too many parameters that you want to pass to a function, create a `config` struct:
 ```go
