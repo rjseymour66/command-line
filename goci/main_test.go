@@ -30,14 +30,16 @@ func TestRun(t *testing.T) {
 					t.Errorf("Expected error: %q. Got 'nil' instead.", tc.expErr)
 					return
 				}
+
 				if !errors.Is(err, tc.expErr) {
 					t.Errorf("Expected error: %q. Got: %q.", tc.expErr, err)
 				}
+				return
 			}
 
-			// if err != nil {
-			// 	t.Errorf("Unexpected error: %q", err)
-			// }
+			if err != nil {
+				t.Errorf("Unexpected error: %q", err)
+			}
 			if out.String() != tc.out {
 				t.Errorf("Expected output: %q. Got: %q", tc.out, out.String())
 			}
