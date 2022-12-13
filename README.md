@@ -19,6 +19,7 @@
 2. How to structure custom errors (see goci)
 3. How to test equality
 4. How to read from STDIN and a flag
+5. Type embedding
 
 ## Linux stuff
 
@@ -121,7 +122,10 @@ $ gzip -l *
 
 Format code:
 ```go
-$ go -w <file>.go
+// formats the code
+$ gofmt -w <file>.go
+// lists files in dir that do not conform to go formatting 
+$ gofmt -l dirname/*.go
 ```
 Verify that you can build the file. Execute this from the directory with the `.go` files:
 ```go
@@ -403,7 +407,7 @@ func (r *Receiver) String() string {
 
 fmt.Print(*r)
 ```
-### io.Writer
+#### io.Writer
 
 Commonly named `w` or `out`. Examples of `io.Writer`:
 - os.Stdout
@@ -475,6 +479,54 @@ type config struct {
 }
 ```
 When you create a `config` object, assign each field the value of a CLI flag.
+
+#### Embedded types, extending types
+
+Embedding types makes all the fields and methods of one type available in the to the embedding type.
+
+You can embed an existing type by embedding it in a new type. For example, if you want to implement a new method on an existing type, you can embed it without adding any fields:
+
+```go
+// extends the step type
+type exceptionStep struct {
+	step
+}
+```
+
+Because you did not add any new fields, you can use the embedded type's constructor:
+```go
+// original type
+func newStep(name, exe, message, proj string, args []string) step {
+	return step{
+		name:    name,
+		exe:     exe,
+		message: message,
+		proj:    proj,
+		args:    args,
+	}
+}
+
+// extened type
+type timeoutStep struct {
+	step
+	timeout time.Duration
+}
+
+
+// extended type constructor
+func newTimeoutStep(name, exe, message, proj string, args []string, timeout time.Duration) timeoutStep {
+	s := timeoutStep{}
+    // embedded type constructor
+	s.step = newStep(name, exe, message, proj, args)
+
+	s.timeout = timeout
+	if s.timeout == 0 {
+		s.timeout = 30 * time.Second
+	}
+
+	return s
+}
+```
 
 #### Value recievers
 
@@ -778,6 +830,33 @@ func byteStuff() []bytes {
     // return []bytes
     return buffer.Bytes()
 }
+```
+## Contexts
+
+If you are executing commands that must communicate over a network, you should use a timeout. To create a timeout, use `context.WithTimeout()`.
+
+`context.WithTimeout()` creates a context from the parent context and a timeout value. To create a new, empty context, pass the `context.Background()` as the parent:
+
+```go
+...
+ctx, cancel := context.WithTimeout(context.Background(), s.timeout)
+defer cancel()
+...
+```
+`context.WithTimeout()` returns the context and a `cancel` function to cancel the context when it is no longer required. You should defer the `cancel` function.
+
+If the context expires because of the timeout, you can check the context's `.Err()' function for a `DeadlineExceeded` error:
+
+```go
+	cmd := exec.CommandContext(ctx, s.exe, s.args...)
+	cmd.Dir = s.proj
+
+	if err := cmd.Run(); err != nil {
+		if ctx.Err() == context.DeadlineExceeded {
+			return ...
+			}
+		}
+        ...
 ```
 
 ## Filesystem
