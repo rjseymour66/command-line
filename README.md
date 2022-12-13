@@ -1046,6 +1046,8 @@ func TestMethod(t *testing.T) {
 
 #### Test helpers with t.Helper()
 
+Add `t.Helper()` to mark a function as a test helper.
+
 You can defer a the cleanup function. If a helper function fails a test, Go prints the line in the test function that calls the helper function.
 
 You can also return a cleanup function to make sure that your tests leave no test artifacts in the filesystem. There is also a `t.Cleanup()` method that registers a cleanup function.
@@ -1127,6 +1129,10 @@ t.Errorf("Error message: %s", err) // Logf() + Fail()
 When testing file writes, use _goldenfiles_: files that contain the expected results and that you load during tests to validate output.
 
 > **IMPORTANT**: Put goldenfiles, and other testing files, in a directory called `testdata`. Go tooling ignores this directory when building and compiling the program.
+
+#### Integration testing with external resources
+
+If you are testing external commands that modify the state of an external resource, the testing conditions change after each test.
 
 ## Templates
 
