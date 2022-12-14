@@ -1581,3 +1581,39 @@ The select statement is similar to a switch statement. It blocks execution of th
 		}
 	}
 ```
+
+# Signals
+
+Signals communicate events among running processes, such as SIGINT, the interrupt signal.
+
+When a program receives an interrupt signal, it stops processing immediately. This can lead to data loss and issues with resources, so you have to make sure that the program exits cleanly.
+
+To handle signals, complete the following:
+- create a channel to receive a signal
+- pass the channel to the `signal.Notify` function, followed by a list of the signals that the application should listen for
+- Wrap the main part of the function in a goroutine so it can run concurrently with `signal.Notify`
+- Create an infinite for loop with a select statement that handles the various channels. The channel that handles the signal should call `signal.Stop(signalChannel)` to stop relaying any incoming signals to the channel.
+
+```go
+sig := make(chan os.Signal, 1)
+done := make(chan struct{})
+
+signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
+
+// goroutine that runs concurrently with signal.Notify
+go func() {
+    // do work
+    close(done)
+}()
+
+for {
+    select {
+    case rec := <-sig:
+        signal.Stop(sig)
+        return fmt.Errorf("%s: Exiting: %w", rec, ErrSignal)
+    case <-done:
+        return nil
+    }
+}
+
+```
