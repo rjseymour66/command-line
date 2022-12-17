@@ -166,6 +166,24 @@ if err != nil {
 }
 ```
 
+#### Idioms
+
+Use `if found...` to determine if an element exists in a list:
+```go
+// returs a bool and int
+func (hl *HostsList) search(host string) (bool, int) {
+    ...
+}
+
+// found is a boolean. You can use a truncated syntax:
+func (hl *HostsList) Add(host string) error {
+	if found, _ := hl.search(host); found {
+		return fmt.Errorf("%w: %s", ErrExists, host)
+	}
+    ...
+}
+```
+
 #### Arrays
 
 ```go
@@ -1617,6 +1635,10 @@ for {
 }
 ```
 
+# Sorting
+
+The `sort` package provides functions that sort 
+
 # Cobra CLI
 
 #### Install
@@ -1632,3 +1654,10 @@ Use the `cobra-cli` tool to init a project:
 ```bash
 $ cobra-cli init <project-name>
 ```
+Add subcommands to a project:
+```bash
+$ cobra add <subcommand-name>
+```
+This adds a new file with boilerplate code in the `/cmd` directory.
+
+#### Add sub
