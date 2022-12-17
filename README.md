@@ -1615,5 +1615,20 @@ for {
         return nil
     }
 }
+```
 
+# Cobra CLI
+
+#### Install
+
+Download and install from the [Github repo](https://github.com/spf13/cobra).
+
+1. `$ go get -u github.com/spf13/cobra@latest`
+2. `$ go install github.com/spf13/cobra-cli@latest`
+
+#### Start a project
+
+Use the `cobra-cli` tool to init a project:
+```bash
+$ cobra-cli init <project-name>
 ```
