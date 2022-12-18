@@ -1660,4 +1660,41 @@ $ cobra add <subcommand-name>
 ```
 This adds a new file with boilerplate code in the `/cmd` directory.
 
-#### Add sub
+#### Add subcommands
+
+Cobra has a flag package is an alias to `pflag`, a replacement for Go's standard flag package that includes POSIX compliance.
+
+Persistent flags use the following structure:
+
+```go
+rootCmd.PersistentFlags().StringP(<command-name>, <short-hand>, <default>, <short-desc>)
+
+// example
+rootCmd.PersistentFlags().StringP("hosts-file", "f", "pScan.hosts", "pScan hosts file")
+```
+
+Command to create a subcommand:
+
+```shell
+$ cobra-cli add <subcommand-name> -p <parent-command-instance-var>
+```
+The `instance variable` is the name of the command variable in `root.go`:
+
+```go 
+
+var hostsCmd = &cobra.Command{
+	Use:   "hosts",
+	Short: "Manage the hosts list",
+	Long: "...",
+}
+```
+
+For example:
+
+```shell
+$ cobra-cli add list -p hostsCmd
+```
+
+#### Persistent flags
+
+Add these flags in the root.go file. Persistent flags are available to the command and all subcommands under that command.
