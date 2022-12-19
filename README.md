@@ -20,6 +20,7 @@
 3. How to test equality
 4. How to read from STDIN and a flag
 5. Type embedding
+6. Returning functions, like returning the cleanup function (p. 240), or any of the Cobra *Action() funcs
 
 ## Linux stuff
 
