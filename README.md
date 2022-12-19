@@ -1,6 +1,7 @@
 ## Todo
 
 0. How to instantiate each type:
+    - string, bool (false is the zero type), int, float
     - pointers
     - structs
     - functions
@@ -13,14 +14,13 @@
   Instantiation methods:
     - standard declaration
     - literal
-    - 
 
 1. Comma ok idiom
 2. How to structure custom errors (see goci)
 3. How to test equality
 4. How to read from STDIN and a flag
 5. Type embedding
-6. Returning functions, like returning the cleanup function (p. 240), or any of the Cobra *Action() funcs
+6. Returning functions (closures), like returning the cleanup function (p. 240), or any of the Cobra *Action() funcs
 
 ## Linux stuff
 
@@ -416,9 +416,9 @@ When possible, use interfaces as function arguments instead of concrete types to
 ```go
 io.Reader // any go type that you can read data from
 io.Writer // any go type that you can write to
-fmt.Stringer // returns a string. Similar to .toString() in Java
+fmt.Stringer // returns a string. Similar to .toString() in Java.
 ```
-
+The `Stringer` interface allows you to use the type directly in print functions. For example:
 ```go
 func (r *Receiver) String() string {
     // return a string
@@ -1699,3 +1699,6 @@ $ cobra-cli add list -p hostsCmd
 #### Persistent flags
 
 Add these flags in the root.go file. Persistent flags are available to the command and all subcommands under that command.
+
+# Network connections
+
