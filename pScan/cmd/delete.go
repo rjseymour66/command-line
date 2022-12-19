@@ -15,7 +15,7 @@ import (
 // deleteCmd represents the delete command
 var deleteCmd = &cobra.Command{
 	Use:          "delete <host1>...<host n>",
-	Aliases:      []string{"-d"},
+	Aliases:      []string{"d"},
 	Short:        "Delete host(s) from list",
 	SilenceUsage: true,
 	Args:         cobra.MinimumNArgs(1),
