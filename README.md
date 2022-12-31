@@ -156,6 +156,11 @@ import (
     "github.com/entire/module/path/dependcy2"
 )
 ```
+Clean up go.mod and install missing dependencies:
+```go
+$ cd <project-root dir>
+$ go mod tidy
+```
 
 ## Basics
 
@@ -1698,6 +1703,11 @@ For example:
 ```shell
 $ cobra-cli add list -p hostsCmd
 ```
+
+#### Command completion and docs
+
+
+
 
 ## Viper
 
