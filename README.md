@@ -141,6 +141,9 @@ Run tests:
 ```go
 // verbose output
 $ go test -v
+// tests for a specific dir
+$ go test -v ./<dirname>/
+$ go test -v ./cmd/
 ```
 Add external dependencies to the project:
 ```go
@@ -1694,6 +1697,35 @@ For example:
 
 ```shell
 $ cobra-cli add list -p hostsCmd
+```
+
+## Viper
+
+Install [Viper](https://github.com/spf13/viper):
+
+```shell
+$ go get github.com/spf13/viper
+```
+
+#### Initial setup
+
+```go
+// cmd/root.go
+
+func init() {
+    ...
+
+	// replace dash with underscore for some OSs
+	replacer := strings.NewReplacer("-", "_")
+	viper.SetEnvKeyReplacer(replacer)
+	// add prefix to host file env var
+	viper.SetEnvPrefix("PSCAN")
+
+	// bind key to the flag
+	viper.BindPFlag("hosts-file", rootCmd.PersistentFlags().Lookup("host-file"))
+
+	...
+}
 ```
 
 #### Persistent flags
