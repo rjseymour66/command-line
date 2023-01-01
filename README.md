@@ -129,24 +129,30 @@ $ gofmt -w <file>.go
 $ gofmt -l dirname/*.go
 ```
 Verify that you can build the file. Execute this from the directory with the `.go` files:
-```go
+```shell
 $ go build
 ```
 Build the binary:
-```go
-$ go build // uses module name for binary name
+```shell
+$ go build # uses module name for binary name
 $ go build -o <binary-name>
 ```
+
+Run a program, like a server:
+```shell
+$ go run .
+```
+
 Run tests:
-```go
-// verbose output
+```shell
+# verbose output
 $ go test -v
-// tests for a specific dir
+# tests for a specific dir
 $ go test -v ./<dirname>/
 $ go test -v ./cmd/
 ```
 Add external dependencies to the project:
-```go
+```shell
 $ go get github.com/entire/module/path
 ```
 When you import these packages into your project:
@@ -157,9 +163,19 @@ import (
 )
 ```
 Clean up go.mod and install missing dependencies:
-```go
+```shell
 $ cd <project-root dir>
 $ go mod tidy
+```
+#### go mod
+
+Update the `go.mod` file with [mod commands](https://go.dev/ref/mod#mod-commands).
+List all go packages in the current directory tree:
+```shell
+# list packages
+$ go list
+# list modules
+$ go list -m 
 ```
 
 ## Basics
@@ -1744,3 +1760,68 @@ Add these flags in the root.go file. Persistent flags are available to the comma
 
 # Network connections
 
+# Servers
+
+The `net/http` package provides the `ListenAndServer()` function that creates a default server. However, this function does not allow you to define timeouts to manage bad connections or server resources, so you should define custom server.
+
+#### Custom servers
+
+Create a custom server with the [`Server` type](https://pkg.go.dev/net/http#Server). The `Server` type is a struct with the following fields:
+
+```go 
+type Server struct {
+	Addr string
+	Handler Handler
+	TLSConfig *tls.Config
+	ReadTimeout time.Duration
+	ReadHeaderTimeout time.Duration
+	WriteTimeout time.Duration
+	IdleTimeout time.Duration
+	MaxHeaderBytes int
+	TLSNextProto map[string]func(*Server, *tls.Conn, Handler)
+	ConnState func(net.Conn, ConnState)
+	ErrorLog *log.Logger
+	BaseContext func(net.Listener) context.Context
+	ConnContext func(ctx context.Context, c net.Conn) context.Context
+}
+```
+
+Implement the fields that you need when you define a custom server:
+
+```go 
+customServer := &http.Server{
+    Addr:         fmt.Sprintf("%s:%d", *host, *port),
+    Handler:      MuxFunc(*todoFile),
+    ReadTimeout:  10 * time.Second,
+    WriteTimeout: 10 * time.Second,
+}
+```
+
+Start the server with `ListenAndServe`:
+
+```go
+if err := s.ListenAndServe(); err != nil {
+    fmt.Fprintln(os.Stderr, err)
+    os.Exit(1)
+}
+```
+
+#### Multiplexers
+
+A multiplexer maps incoming requests to the proper handler functions using the request URL. `net/http` provides the DefaultServeMux function that returns the default multiplexer, but you should define a custom multiplexer for the following reasons:
+- The default registers routes globally.
+- You can add dependencies to the routes.
+- Custom multiplexers allow integration testing
+
+#### HTTP handlers
+
+Handlers handle a request and responds to it.
+
+You create the server, then use `HandleFunc` to register routes to handler functions. Then you use `HandlerFunc` to define the handler for the route.
+
+- http.Handler
+- http.HandlerFunc is an adapter type that 
+
+#### HTTP errors
+
+`http.NotFound` when a client requests an unknown route
