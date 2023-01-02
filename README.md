@@ -1817,11 +1817,12 @@ A multiplexer maps incoming requests to the proper handler functions using the r
 
 Handlers handle a request and responds to it.
 
-You create the server, then use `HandleFunc` to register routes to handler functions. Then you use `HandlerFunc` to define the handler for the route.
+You create the server, then use `HandleFunc` to register routes to handler functions. Then you use `HandlerFunc` to define the handler function for the route.
 
 - http.Handler
-- http.HandlerFunc is an adapter type that 
+- http.HandlerFunc is an adapter type that lets you define ordinary functions as HTTP handlers.
 
-#### HTTP errors
+#### HTTP return code and errors
 
 `http.NotFound` when a client requests an unknown route
+`http.StatusOK` 200
