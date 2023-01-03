@@ -22,6 +22,7 @@
 5. Type embedding
 6. Returning functions (closures), like returning the cleanup function (p. 240), or any of the Cobra *Action() funcs
 7. How to parse query parameters with [URL.Query()](https://pkg.go.dev/net/url#URL.Query)
+8. Encoding/decoding vs Marshalling/UnMarshalling
 
 ## Linux stuff
 
@@ -693,6 +694,32 @@ type responseFormat struct {
 }
 ```
 Capitalize the field name so that you can export it as JSON with Go's native JSON encoding.
+
+#### Encoding JSON to a stream
+
+Use the [json.Encoder](https://pkg.go.dev/encoding/json@go1.19.4#Encoder) and its `.Endcode()` method to write the program's memory representation of JSON (a struct) to an output stream (an `io.Writer`). `Encoder` accepts the writer, and `.Encode()` takes the values that you want to encode. You can chain the methods. For example:
+
+```go
+var buffer bytes.Buffer
+
+objToJSON := struct {
+    Value string `json:"value"`
+}{
+    Value: stringName
+}
+
+if err := json.NewEncoder(&buffer).Encode(item); err != nil {
+    // handle error
+}
+```
+
+#### Decoding JSON from stream
+
+The [json.Decoder](https://pkg.go.dev/encoding/json@go1.19.4#Decoder) is just like the `json.Encoder`, except that it reads from an input stream (`io.Reader`) and decodes JSON into its memory representation (a struct):
+
+```go
+
+```
 
 #### Marshal methods
 
@@ -1882,6 +1909,7 @@ http.StatusText(200)
 `http.StatusInternalServerError` return for standard server error
 `http.StatusMethodNotAllowed` when a client uses an unsupported request method
 `http.StatusBadRequest` 
+`http.StatusCreated` 201. request succeeded and led to the creation of a resource
 
 #### Request methods
 

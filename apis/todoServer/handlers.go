@@ -137,7 +137,7 @@ func validateID(path string, list *todo.List) (int, error) {
 	}
 
 	if id < 1 {
-		return 0, fmt.Errorf("%w: Invalid ID: Less than one", ErrInvalidData)
+		return 0, fmt.Errorf("%w, Invalid ID: Less than one", ErrInvalidData)
 	}
 
 	if id > len(*list) {

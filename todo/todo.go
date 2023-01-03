@@ -21,12 +21,6 @@ type List []item
 
 // Add creates a new todo item and appends it to the list
 func (l *List) Add(task string) {
-	// for each task in the slice, create
-	// an item, add assign the task to t.Task, then
-	// append it to the list.
-	// Outside of the loop, return the *l
-	// for _, task := range tasks {
-	// }
 	t := item{
 		Task:        task,
 		Done:        false,
@@ -46,7 +40,8 @@ func (l *List) Complete(i int) error {
 	if i <= 0 || i > len(ls) {
 		return fmt.Errorf("Item %d does not exist", i)
 	}
-	// 0 base index
+
+	// Adjusting index for 0 based index
 	ls[i-1].Done = true
 	ls[i-1].CompletedAt = time.Now()
 
@@ -60,7 +55,7 @@ func (l *List) Delete(i int) error {
 		return fmt.Errorf("Item %d does not exist", i)
 	}
 
-	// 0 base index
+	// Adjusting index for 0 based index
 	*l = append(ls[:i-1], ls[i:]...)
 
 	return nil
@@ -73,6 +68,7 @@ func (l *List) Save(filename string) error {
 	if err != nil {
 		return err
 	}
+
 	return os.WriteFile(filename, js, 0644)
 }
 
@@ -86,6 +82,7 @@ func (l *List) Get(filename string) error {
 		}
 		return err
 	}
+
 	if len(file) == 0 {
 		return nil
 	}
@@ -103,10 +100,11 @@ func (l *List) String() string {
 		if t.Done {
 			prefix = "X "
 		}
-		// Adjust the item number k to print numbers
-		// starting from 1 instead of zero
+
+		// Adjust the item number k to print numbers starting from 1 instead of 0
 		formatted += fmt.Sprintf("%s%d: %s\n", prefix, k+1, t.Task)
 	}
+
 	return formatted
 }
 

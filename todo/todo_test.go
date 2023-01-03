@@ -1,6 +1,7 @@
 package todo_test
 
 import (
+	"io/ioutil"
 	"os"
 	"testing"
 	"todo"
@@ -11,12 +12,12 @@ func TestAdd(t *testing.T) {
 	l := todo.List{}
 
 	taskName := "New Task"
-	tasks := []string{taskName}
-	l.Add(tasks)
+	l.Add(taskName)
 
 	if l[0].Task != taskName {
 		t.Errorf("Expected %q, got %q instead.", taskName, l[0].Task)
 	}
+
 }
 
 // TestComplete tests the Complete method of the List type
@@ -24,8 +25,7 @@ func TestComplete(t *testing.T) {
 	l := todo.List{}
 
 	taskName := "New Task"
-	tasks := []string{taskName}
-	l.Add(tasks)
+	l.Add(taskName)
 
 	if l[0].Task != taskName {
 		t.Errorf("Expected %q, got %q instead.", taskName, l[0].Task)
@@ -40,6 +40,7 @@ func TestComplete(t *testing.T) {
 	if !l[0].Done {
 		t.Errorf("New task should be completed.")
 	}
+
 }
 
 // TestDelete tests the Delete method of the List type
@@ -52,7 +53,9 @@ func TestDelete(t *testing.T) {
 		"New Task 3",
 	}
 
-	l.Add(tasks)
+	for _, v := range tasks {
+		l.Add(v)
+	}
 
 	if l[0].Task != tasks[0] {
 		t.Errorf("Expected %q, got %q instead.", tasks[0], l[0].Task)
@@ -61,7 +64,7 @@ func TestDelete(t *testing.T) {
 	l.Delete(2)
 
 	if len(l) != 2 {
-		t.Errorf("Expected list length %d, got %d instead", 2, len(l))
+		t.Errorf("Expected list length %d, got %d instead.", 2, len(l))
 	}
 
 	if l[1].Task != tasks[2] {
@@ -75,13 +78,13 @@ func TestSaveGet(t *testing.T) {
 	l2 := todo.List{}
 
 	taskName := "New Task"
-	tasks := []string{taskName}
-	l1.Add(tasks)
+	l1.Add(taskName)
 
 	if l1[0].Task != taskName {
 		t.Errorf("Expected %q, got %q instead.", taskName, l1[0].Task)
 	}
-	tf, err := os.CreateTemp("", "")
+
+	tf, err := ioutil.TempFile("", "")
 
 	if err != nil {
 		t.Fatalf("Error creating temp file: %s", err)
@@ -99,4 +102,5 @@ func TestSaveGet(t *testing.T) {
 	if l1[0].Task != l2[0].Task {
 		t.Errorf("Task %q should match %q task.", l1[0].Task, l2[0].Task)
 	}
+
 }
