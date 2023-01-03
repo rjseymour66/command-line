@@ -1663,6 +1663,10 @@ The select statement is similar to a switch statement. It blocks execution of th
 
 The [Locker interface](https://pkg.go.dev/sync@go1.19.4#Locker) has methods that lock and unlock an object. Use this when you want to prevent concurrent access to an object during operations.
 
+`&sync.Mutex` implements the Locker interface:
+```go
+mu := &sync.Mutex{}
+```
 
 
 # Signals
