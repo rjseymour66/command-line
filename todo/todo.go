@@ -20,21 +20,21 @@ type item struct {
 type List []item
 
 // Add creates a new todo item and appends it to the list
-func (l *List) Add(tasks []string) {
+func (l *List) Add(task string) {
 	// for each task in the slice, create
 	// an item, add assign the task to t.Task, then
 	// append it to the list.
 	// Outside of the loop, return the *l
-	for _, task := range tasks {
-		t := item{
-			Task:        task,
-			Done:        false,
-			CreatedAt:   time.Now(),
-			CompletedAt: time.Time{},
-		}
-
-		*l = append(*l, t)
+	// for _, task := range tasks {
+	// }
+	t := item{
+		Task:        task,
+		Done:        false,
+		CreatedAt:   time.Now(),
+		CompletedAt: time.Time{},
 	}
+
+	*l = append(*l, t)
 }
 
 // Complete method marks a ToDo item as completed by setting

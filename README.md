@@ -21,6 +21,7 @@
 4. How to read from STDIN and a flag
 5. Type embedding
 6. Returning functions (closures), like returning the cleanup function (p. 240), or any of the Cobra *Action() funcs
+7. How to parse query parameters with [URL.Query()](https://pkg.go.dev/net/url#URL.Query)
 
 ## Linux stuff
 
@@ -680,11 +681,44 @@ john := person{}
 
 #### JSON
 
-#### Marshalling
+#### Structs and struct tags
+
+When you define a struct to model a JSON response or request, use struct tags to map a struct field to a field in the JSON object. 
+
+Struct tags are enclosed in backticks (\`\`). Use the format `json:"json_field"`, using snake case when necessary. For example:
+
+```go
+type responseFormat struct {
+	Results todo.List `json:"results"`
+}
+```
+Capitalize the field name so that you can export it as JSON with Go's native JSON encoding.
+
+#### Marshal methods
 
 > **IMPORTANT**: Always pass pointers to `json.Marshall` and `json.Unmarshall`.
 
-Marshalling transforms a memory representation of an object into the JSON data format for storage or transmission.
+Marshalling transforms a memory representation of an object into the JSON data format for storage or transmission. In other words, it returns data in JSON format.
+
+Create a MarshallJSON() method when you have to map structs to complex JSON objects. For example:
+
+```go
+func (r *todoResponse) MarshallJSON() ([]byte, error) {
+	resp := struct {
+		Results      todo.List `json:"results"`
+		Date         int64     `json:"date"`
+		TotalResults int       `json:"total_results"`
+	}{
+		Results:      r.Results,
+		Date:         time.Now().Unix(),
+		TotalResults: len(r.Results),
+	}
+
+	return json.Marshal(resp)
+}
+```
+The preceding method models a response with an anonymous struct, then returns the response in JSON format.
+
 
 #### Unmarshalling
 Unmarshalling transforms a JSON object into a memory representation that is executable.
@@ -1625,6 +1659,12 @@ The select statement is similar to a switch statement. It blocks execution of th
 	}
 ```
 
+#### Locks
+
+The [Locker interface](https://pkg.go.dev/sync@go1.19.4#Locker) has methods that lock and unlock an object. Use this when you want to prevent concurrent access to an object during operations.
+
+
+
 # Signals
 
 Signals communicate events among running processes, such as SIGINT, the interrupt signal.
@@ -1815,14 +1855,35 @@ A multiplexer maps incoming requests to the proper handler functions using the r
 
 #### HTTP handlers
 
-Handlers handle a request and responds to it.
+Handlers handle a request and responds to it. An object of type `Handler` satisfies the `Handler` field in a custom HTTP server.
 
 You create the server, then use `HandleFunc` to register routes to handler functions. Then you use `HandlerFunc` to define the handler function for the route.
 
-- http.Handler
-- http.HandlerFunc is an adapter type that lets you define ordinary functions as HTTP handlers.
+- `http.Handler` is an interface that has the `ServeHTTP(w ResponseWriter, r *Request)` signature.
+- `http.HandlerFunc` is an adapter type that lets you define ordinary functions as HTTP handlers. It implements `ServeHTTP()`.
+- `http.HandleFunc` registers a handler with a multiplexer server. It accepts two arguments: the path as a `string`, and the handler function. It implements `ServeHTTP()`.
+- `http.NewServeMux()` returns a custom server. It implements `ServeHTTP()`.
 
-#### HTTP return code and errors
+# HTTP general
+
+#### Status codes
+
+Use `http.StatusText()` to return the text for an HTTP status code. For example:
+```go
+http.StatusText(200)
+```
 
 `http.NotFound` when a client requests an unknown route
 `http.StatusOK` 200
+`http.StatusInternalServerError` return for standard server error
+`http.StatusMethodNotAllowed` when a client uses an unsupported request method
+`http.StatusBadRequest` 
+
+#### Request methods
+
+Go provides constant values to identify request methods:
+
+```go
+http.MethodGet
+http.MethodPost
+```
