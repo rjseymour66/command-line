@@ -15,16 +15,6 @@ var (
 	ErrInvalidData = errors.New("invalid data")
 )
 
-func rootHandler(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path != "/" {
-		replyError(w, r, http.StatusNotFound, "")
-		return
-	}
-
-	content := "There's an API here"
-	replyTextContent(w, r, http.StatusOK, content)
-}
-
 func todoRouter(todoFile string, l sync.Locker) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		list := &todo.List{}
@@ -58,6 +48,7 @@ func todoRouter(todoFile string, l sync.Locker) http.HandlerFunc {
 			replyError(w, r, http.StatusBadRequest, err.Error())
 			return
 		}
+
 		switch r.Method {
 		case http.MethodGet:
 			getOneHandler(w, r, list, id)
@@ -79,23 +70,30 @@ func getAllHandler(w http.ResponseWriter, r *http.Request, list *todo.List) {
 	replyJSONContent(w, r, http.StatusOK, resp)
 }
 
-func getOneHandler(w http.ResponseWriter, r *http.Request, list *todo.List, id int) {
+func getOneHandler(w http.ResponseWriter, r *http.Request,
+	list *todo.List, id int) {
+
 	resp := &todoResponse{
 		Results: (*list)[id-1 : id],
 	}
 	replyJSONContent(w, r, http.StatusOK, resp)
 }
 
-func deleteHandler(w http.ResponseWriter, r *http.Request, list *todo.List, id int, todoFile string) {
+func deleteHandler(w http.ResponseWriter, r *http.Request,
+	list *todo.List, id int, todoFile string) {
+
 	list.Delete(id)
 	if err := list.Save(todoFile); err != nil {
 		replyError(w, r, http.StatusInternalServerError, err.Error())
 		return
 	}
+
 	replyTextContent(w, r, http.StatusNoContent, "")
 }
 
-func patchHandler(w http.ResponseWriter, r *http.Request, list *todo.List, id int, todoFile string) {
+func patchHandler(w http.ResponseWriter, r *http.Request,
+	list *todo.List, id int, todoFile string) {
+
 	q := r.URL.Query()
 
 	if _, ok := q["complete"]; !ok {
@@ -103,6 +101,7 @@ func patchHandler(w http.ResponseWriter, r *http.Request, list *todo.List, id in
 		replyError(w, r, http.StatusBadRequest, message)
 		return
 	}
+
 	list.Complete(id)
 	if err := list.Save(todoFile); err != nil {
 		replyError(w, r, http.StatusInternalServerError, err.Error())
@@ -112,7 +111,9 @@ func patchHandler(w http.ResponseWriter, r *http.Request, list *todo.List, id in
 	replyTextContent(w, r, http.StatusNoContent, "")
 }
 
-func addHandler(w http.ResponseWriter, r *http.Request, list *todo.List, todoFile string) {
+func addHandler(w http.ResponseWriter, r *http.Request,
+	list *todo.List, todoFile string) {
+
 	item := struct {
 		Task string `json:"task"`
 	}{}
@@ -122,12 +123,24 @@ func addHandler(w http.ResponseWriter, r *http.Request, list *todo.List, todoFil
 		replyError(w, r, http.StatusBadRequest, message)
 		return
 	}
+
 	list.Add(item.Task)
 	if err := list.Save(todoFile); err != nil {
 		replyError(w, r, http.StatusInternalServerError, err.Error())
 		return
 	}
+
 	replyTextContent(w, r, http.StatusCreated, "")
+}
+
+func rootHandler(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path != "/" {
+		replyError(w, r, http.StatusNotFound, "")
+		return
+	}
+
+	content := "There's an API here"
+	replyTextContent(w, r, http.StatusOK, content)
 }
 
 func validateID(path string, list *todo.List) (int, error) {

@@ -10,7 +10,7 @@ type todoResponse struct {
 	Results todo.List `json:"results"`
 }
 
-func (r *todoResponse) MarshallJSON() ([]byte, error) {
+func (r *todoResponse) MarshalJSON() ([]byte, error) {
 	resp := struct {
 		Results      todo.List `json:"results"`
 		Date         int64     `json:"date"`

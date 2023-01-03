@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -13,43 +14,9 @@ import (
 	"todo"
 )
 
-func setupAPI(t *testing.T) (string, func()) {
-	t.Helper()
-	tempTodoFile, err := os.CreateTemp("", "todotest")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	ts := httptest.NewServer(newMux(tempTodoFile.Name()))
-
-	// Adding a couple of items for testing
-	for i := 1; i < 3; i++ {
-		var body bytes.Buffer
-		taskName := fmt.Sprintf("Task number %d.", i)
-		item := struct {
-			Task string `json:"task"`
-		}{
-			Task: taskName,
-		}
-
-		if err := json.NewEncoder(&body).Encode(item); err != nil {
-			t.Fatal(err)
-		}
-
-		r, err := http.Post(ts.URL+"/todo", "application/json", &body)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		if r.StatusCode != http.StatusCreated {
-			t.Fatalf("Failed to add initial items: Status: %d", r.StatusCode)
-		}
-	}
-
-	return ts.URL, func() {
-		ts.Close()
-		os.Remove(tempTodoFile.Name())
-	}
+func TestMain(m *testing.M) {
+	log.SetOutput(io.Discard)
+	os.Exit(m.Run())
 }
 
 func TestGet(t *testing.T) {
@@ -80,7 +47,6 @@ func TestGet(t *testing.T) {
 	}
 
 	url, cleanup := setupAPI(t)
-
 	defer cleanup()
 
 	for _, tc := range testCases {
@@ -115,7 +81,8 @@ func TestGet(t *testing.T) {
 					t.Errorf("Expected %d items, got %d.", tc.expItems, resp.TotalResults)
 				}
 				if resp.Results[0].Task != tc.expContent {
-					t.Errorf("Expected %q, got %q.", tc.expContent, resp.Results[0].Task)
+					t.Errorf("Expected %q, got %q.", tc.expContent,
+						resp.Results[0].Task)
 				}
 			case strings.Contains(r.Header.Get("Content-Type"), "text/plain"):
 				if body, err = io.ReadAll(r.Body); err != nil {
@@ -123,11 +90,13 @@ func TestGet(t *testing.T) {
 				}
 
 				if !strings.Contains(string(body), tc.expContent) {
-					t.Errorf("Expected %q, got %q", tc.expContent, string(body))
+					t.Errorf("Expected %q, got %q.", tc.expContent,
+						string(body))
 				}
 			default:
 				t.Fatalf("Unsupported Content-Type: %q", r.Header.Get("Content-Type"))
 			}
+
 		})
 	}
 }
@@ -144,6 +113,7 @@ func TestAdd(t *testing.T) {
 		}{
 			Task: taskName,
 		}
+
 		if err := json.NewEncoder(&body).Encode(item); err != nil {
 			t.Fatal(err)
 		}
@@ -152,18 +122,24 @@ func TestAdd(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+
 		if r.StatusCode != http.StatusCreated {
-			t.Errorf("Expected %q, got %q.", http.StatusText(http.StatusCreated), http.StatusText(r.StatusCode))
+			t.Errorf("Expected %q, got %q.",
+				http.StatusText(http.StatusCreated), http.StatusText(r.StatusCode))
 		}
 	})
+
 	t.Run("CheckAdd", func(t *testing.T) {
 		r, err := http.Get(url + "/todo/3")
 		if err != nil {
 			t.Error(err)
 		}
+
 		if r.StatusCode != http.StatusOK {
-			t.Fatalf("Expected %q, got %q.", http.StatusText(http.StatusOK), http.StatusText(r.StatusCode))
+			t.Fatalf("Expected %q, got %q.",
+				http.StatusText(http.StatusOK), http.StatusText(r.StatusCode))
 		}
+
 		var resp todoResponse
 		if err := json.NewDecoder(r.Body).Decode(&resp); err != nil {
 			t.Fatal(err)
@@ -171,7 +147,7 @@ func TestAdd(t *testing.T) {
 		r.Body.Close()
 
 		if resp.Results[0].Task != taskName {
-			t.Errorf("Expected %q, got %q", taskName, resp.Results[0].Task)
+			t.Errorf("Expected %q, got %q.", taskName, resp.Results[0].Task)
 		}
 	})
 }
@@ -276,4 +252,43 @@ func TestComplete(t *testing.T) {
 			t.Error("Expected Item 2 not to be completed")
 		}
 	})
+}
+
+func setupAPI(t *testing.T) (string, func()) {
+	t.Helper()
+	tempTodoFile, err := os.CreateTemp("", "todotest")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	ts := httptest.NewServer(newMux(tempTodoFile.Name()))
+
+	// Adding a couple of items for testing
+	for i := 1; i < 3; i++ {
+		var body bytes.Buffer
+		taskName := fmt.Sprintf("Task number %d.", i)
+		item := struct {
+			Task string `json:"task"`
+		}{
+			Task: taskName,
+		}
+
+		if err := json.NewEncoder(&body).Encode(item); err != nil {
+			t.Fatal(err)
+		}
+
+		r, err := http.Post(ts.URL+"/todo", "application/json", &body)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if r.StatusCode != http.StatusCreated {
+			t.Fatalf("Failed to add initial items: Status: %d", r.StatusCode)
+		}
+	}
+
+	return ts.URL, func() {
+		ts.Close()
+		os.Remove(tempTodoFile.Name())
+	}
 }
