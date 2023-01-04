@@ -23,6 +23,7 @@
 6. Returning functions (closures), like returning the cleanup function (p. 240), or any of the Cobra *Action() funcs
 7. How to parse query parameters with [URL.Query()](https://pkg.go.dev/net/url#URL.Query)
 8. Encoding/decoding vs Marshalling/UnMarshalling
+9. Explain any Flush() methods https://pkg.go.dev/text/tabwriter#Writer.Flush
 
 ## Linux stuff
 
@@ -935,7 +936,14 @@ func byteStuff() []bytes {
     return buffer.Bytes()
 }
 ```
-## Contexts
+
+#### tabWriter
+
+`tabwriter.Writer` writes tabulated data with formatted columns with consistent widths using tabs (`\t`).
+
+https://pkg.go.dev/text/tabwriter#pkg-overview
+
+# Contexts
 
 If you are executing commands that must communicate over a network, you should use a timeout. To create a timeout, use `context.WithTimeout()`.
 
@@ -1831,6 +1839,18 @@ Add these flags in the root.go file. Persistent flags are available to the comma
 
 # Network connections
 
+# Clients
+
+In Go, a single client can create multiple connections.
+
+#### Creating clients
+
+Go provides a default client, but you cannot customize it with functionality such as a connection timeout.
+
+#### Model responses
+
+You have to model responses with structs. Create a struct to model an individual resource and a struct to model the server response.
+
 # Servers
 
 The `net/http` package provides the `ListenAndServer()` function that creates a default server. However, this function does not allow you to define timeouts to manage bad connections or server resources, so you should define custom server.
@@ -1895,6 +1915,76 @@ You create the server, then use `HandleFunc` to register routes to handler funct
 - `http.HandleFunc` registers a handler with a multiplexer server. It accepts two arguments: the path as a `string`, and the handler function. It implements `ServeHTTP()`.
 - `http.NewServeMux()` returns a custom server. It implements `ServeHTTP()`.
 
+#### Router functions
+
+```go
+func todoRouter(todoFile string, l sync.Locker) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		list := &todo.List{}
+
+		l.Lock()
+		defer l.Unlock()
+		if err := list.Get(todoFile); err != nil {
+			replyError(w, r, http.StatusInternalServerError, err.Error())
+			return
+		}
+
+		if r.URL.Path == "" {
+			switch r.Method {
+			case http.MethodGet:
+				getAllHandler(w, r, list)
+			case http.MethodPost:
+				addHandler(w, r, list, todoFile)
+			default:
+				message := "Method not supported"
+				replyError(w, r, http.StatusMethodNotAllowed, message)
+			}
+			return
+		}
+
+		id, err := validateID(r.URL.Path, list)
+		if err != nil {
+			if errors.Is(err, ErrNotFound) {
+				replyError(w, r, http.StatusNotFound, err.Error())
+				return
+			}
+			replyError(w, r, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		switch r.Method {
+		case http.MethodGet:
+			getOneHandler(w, r, list, id)
+		case http.MethodDelete:
+			deleteHandler(w, r, list, id, todoFile)
+		case http.MethodPatch:
+			patchHandler(w, r, list, id, todoFile)
+		default:
+			message := "Method not supported"
+			replyError(w, r, http.StatusMethodNotAllowed, message)
+		}
+	}
+}
+```
+
+Multiplexer definition:
+
+```go
+func newMux(todoFile string) http.Handler {
+	m := http.NewServeMux()
+	mu := &sync.Mutex{}
+
+	m.HandleFunc("/", rootHandler)
+
+	t := todoRouter(todoFile, mu)
+
+	m.Handle("/todo", http.StripPrefix("/todo", t))
+	m.Handle("/todo/", http.StripPrefix("/todo/", t))
+
+	return m
+}
+```
+
 # HTTP general
 
 #### Status codes
@@ -1903,7 +1993,7 @@ Use `http.StatusText()` to return the text for an HTTP status code. For example:
 ```go
 http.StatusText(200)
 ```
-
+Go provides status code constants to make code more human readable. For example:
 `http.NotFound` when a client requests an unknown route
 `http.StatusOK` 200
 `http.StatusInternalServerError` return for standard server error
