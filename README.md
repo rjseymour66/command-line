@@ -413,6 +413,10 @@ func main() {
 	fmt.Println(strings.TrimSpace(" \t\n Hello, Gophers \n\t\r\n"))
 }
 ```
+You can build strings using `fmt.Sprintf()`:
+```go
+u := fmt.Sprintf("%s/todo/%d", apiRoot, id)
+```
 
 ## Pointers
 
@@ -1054,6 +1058,12 @@ current = time.Now()
 Get the zero value for time.Time with an empty struct:
 ```go
 zeroVal = time.Time{}
+```
+Format the time with a constant. Then, you can pass `timeFormat` to the `.Format()` method of a time.Time() type: For example:
+
+```go
+const timeFormat = "Jan/02 @15:04"
+task.CreatedAt.Format(timeFormat)
 ```
 
 ## Building commands with os/exec
