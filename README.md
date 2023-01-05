@@ -96,6 +96,12 @@ PASS
 ok  	colstats	6.067s
 ```
 
+> TODO Learn how cURL works
+
+```shell
+curl -L -XPOST -d '{"task":"Task 1"}' -H 'Content-Type: application/json' http://localhost:8080/todo
+```
+
 #### Compressed files
 
 Unzip `.zip` files with `unzip`. Do not include a directory if you want to unzip it to the current working directory:
@@ -313,6 +319,14 @@ colors["Red"] = "#da137"
 
 // DO NOT create nil maps, they result in a compile error
 var colors map[string]string{}
+
+// map with a struct literal value
+var testResp = map[string]struct {
+	Status int 
+	Body string 
+} {
+	//...
+}
 ```
 
 
