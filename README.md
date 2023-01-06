@@ -23,6 +23,7 @@
 6. Returning functions (closures), like returning the cleanup function (p. 240), or any of the Cobra *Action() funcs
 7. How to parse query parameters with [URL.Query()](https://pkg.go.dev/net/url#URL.Query)
 8. Encoding/decoding vs Marshalling/UnMarshalling
+   - I think encoding writes bytes, marshalling writes strings into structs
 9. Explain any Flush() methods https://pkg.go.dev/text/tabwriter#Writer.Flush
 
 ## Linux stuff
@@ -199,6 +200,7 @@ if err != nil {
     return nil, fmt.Errorf("Cannot read data from file: %w", err)
 }
 ```
+For more info, read [Digital Ocean](https://www.digitalocean.com/community/tutorials/how-to-add-extra-information-to-errors-in-go).
 
 #### Idioms
 
@@ -475,7 +477,7 @@ fmt.Print(*r)
 
 Commonly named `w` or `out`. Examples of `io.Writer`:
 - os.Stdout
-- bytes.Buffer (implements `io.Writer` as a pointer receiver, so use `&`)
+- bytes.Buffer (implements `io.Writer` (and `io.Reader`) as a pointer receiver, so use `&`)
 - files (type os.File implements `io.Writer`)
 - gzip.Writer
 
@@ -1869,11 +1871,74 @@ In Go, a single client can create multiple connections.
 
 #### Creating clients
 
-Go provides a default client, but you cannot customize it with functionality such as a connection timeout.
+Go provides a default client, but you cannot customize it with functionality such as a connection timeout:
+
+```go
+func newClient() *http.Client {
+	c := &http.Client{
+		Timeout: 10 * time.Second,
+	}
+	return c
+}
+```
 
 #### Model responses
 
 You have to model responses with structs. Create a struct to model an individual resource and a struct to model the server response.
+
+#### Sending requests
+
+Create a generic method that can send any type of request and handle any response code. The `.Do()` method can send any type of request (GET, POST, PUT, DELETE, etc.).
+
+A reqeust should perform the following:
+- Create a request object with [.NewRequest(method, url string, body io.Reader)](https://pkg.go.dev/net/http#NewRequest)
+- Set any content headers with [Header.Set(header-name, value)](https://pkg.go.dev/net/http#Header.Set)
+- Execute the request with the .Do() method. Save the response in a var
+- Close the response body (sooner than later)
+- Check that the response code is what you expected. If not, use custom error messages with the `%w` formatting verb.
+- If the request was successful, return `nil`
+
+For example:
+
+```go
+func sendRequest(url, method, contentType string, expStatus int, body io.Reader) error {
+    // create a new request
+	req, err := http.NewRequest(method, url, body)
+	if err != nil {
+		return err
+	}
+
+    // Set any headers
+	if contentType != "" {
+		req.Header.Set("Content-Type", contentType)
+	}
+
+    // execute the request with .Do() and save the response in a var
+	r, err := newClient().Do(req)
+	if err != nil {
+		return err
+	}
+
+    // make sure the response body is closed 
+	defer r.Body.Close()
+
+    // check status codes
+	if r.StatusCode != expStatus {
+		msg, err := io.ReadAll(r.Body)
+		if err != nil {
+			return fmt.Errorf("Cannot read body: %w", err)
+		}
+		err = ErrInvalidResponse
+		if r.StatusCode == http.StatusNotFound {
+			err = ErrNotFound
+		}
+		return fmt.Errorf("%w: %s", err, msg)
+	}
+
+    // return nil for a successful request
+	return nil
+}
+```
 
 # Servers
 
