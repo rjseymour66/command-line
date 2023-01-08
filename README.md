@@ -25,6 +25,9 @@
 8. Encoding/decoding vs Marshalling/UnMarshalling
    - I think encoding writes bytes, marshalling writes strings into structs
 9. Explain any Flush() methods https://pkg.go.dev/text/tabwriter#Writer.Flush
+10. Write a section about designing a client, explaining funcs
+11. Describe how to write Cobra CLI tools w Viper
+12. How do build tags work? [Digital Ocean](https://www.digitalocean.com/community/tutorials/customizing-go-binaries-with-build-tags)
 
 ## Linux stuff
 
@@ -1771,6 +1774,15 @@ The `sort` package provides functions that sort
 
 # Cobra CLI
 
+TODO: Setup
+
+1. Create the functions that the tool will use
+2. Add the CLI option with `cobra-cli add <toolname>`
+3. In `<toolname>.go`, update the fields in the &cobra.Command object as needed. Add some of the following fields, if necessary:
+   - SilenceUsage:
+   - Args: 
+4. Update the `Run` field to `RunE`. `RunE` returns a function so you can test it. The signature returns an error.
+
 #### Install
 
 Download and install from the [Github repo](https://github.com/spf13/cobra).
@@ -1940,6 +1952,57 @@ func sendRequest(url, method, contentType string, expStatus int, body io.Reader)
 }
 ```
 
+#### CRUD functions
+
+Use the following functions with the generic `sendRequest()` function for CRUD operations:
+
+```go
+
+
+// PATCH
+// Use Sprintf to format a url with query parameters
+func completeItem(apiRoot string, id int) error {
+	u := fmt.Sprintf("%s/todo/%d?complete", apiRoot, id)
+
+	return sendRequest(u, http.MethodPatch, "", http.StatusNoContent, nil)
+}
+```
+
+#### Integration tests
+
+When you run unit tests, you are using local resources that mock the live API. You can run these as much as you'd like. However, to run integration tests, you need to run your client against the actual API. To make sure that you do not make too many requests to the actual API, use build constraints.
+
+Main challenge is that the test needs to be reproducible. 
+
+Define build constraints at the top of the file:
+
+```go
+// +build integration
+
+package cmd
+
+// file contents...
+```
+
+To exclude a file from integration tests, use the `!` operator before `integration`:
+
+```go
+//go:build !integration
+
+package cmd
+
+// file contents
+```
+When you run the tests, use `-tags <tag-name>` in the command. For example:
+```shell
+$ go test -v ./cmd -tags integration
+```
+
+After you run the integration tests one time, add the `-count=1` tag to ensure that the test does not used cached results:
+
+```shell
+$ go test -v ./cmd -tags integration -count=1
+```
 # Servers
 
 The `net/http` package provides the `ListenAndServer()` function that creates a default server. However, this function does not allow you to define timeouts to manage bad connections or server resources, so you should define custom server.
