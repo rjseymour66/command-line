@@ -15,7 +15,7 @@ import (
 
 // completeCmd represents the complete command
 var completeCmd = &cobra.Command{
-	Use:          "complete",
+	Use:          "complete <id>",
 	Short:        "Marks an item as completed",
 	SilenceUsage: true,
 	Args:         cobra.ExactArgs(1),
