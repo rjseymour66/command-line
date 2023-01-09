@@ -223,6 +223,8 @@ func (hl *HostsList) Add(host string) error {
 }
 ```
 
+The comma, ok idiom checks whether a value is in a map (??????)
+
 #### Arrays
 
 ```go
@@ -333,7 +335,21 @@ var testResp = map[string]struct {
 	//...
 }
 ```
+# iota
 
+The `iota` operator creates a set of constants that increase by 1 for each line. This is helpful to track state or lifecycle stages.
+
+To create an iota constant, create a constant variable and assign the first value `= iota`. For example:
+
+```go
+const (
+	StateNotStarted = iota
+	StateRunning
+	StatePaused
+	StateDone
+	StateCancelled
+)
+```
 
 #### Cross-compilation
 
