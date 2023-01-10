@@ -1087,6 +1087,11 @@ const timeFormat = "Jan/02 @15:04"
 task.CreatedAt.Format(timeFormat)
 ```
 
+Create a ticker when you want to do something at a regular interval:
+```go
+
+```
+
 ## Building commands with os/exec
 
 ### Find the OS
@@ -2177,3 +2182,13 @@ Go provides constant values to identify request methods:
 http.MethodGet
 http.MethodPost
 ```
+
+
+# Repository pattern
+
+The repository pattern is an interface to access data storage while decoupling your business login from your storage implementation.
+
+The Repository Pattern requires two components:
+1. An interface that specifies all the methods that a given type must implement to qualify as a repository for the application. Define this interface in the same package that you use it.
+2. A custom type that implements that interface working as the repository. Make the type and its fields private so callers can access it only through the interface methods.
+
