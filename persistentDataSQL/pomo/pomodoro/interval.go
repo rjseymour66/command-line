@@ -39,6 +39,7 @@ type Repository interface {
 	ByID(id int64) (Interval, error)
 	Last() (Interval, error)
 	Breaks(n int) ([]Interval, error)
+	CategorySummary(day time.Time, filter string) (time.Duration, error)
 }
 
 var (
@@ -70,12 +71,15 @@ func NewConfig(repo Repository, pomodoro, shortBreak,
 	if pomodoro > 0 {
 		c.PomodoroDuration = pomodoro
 	}
+
 	if shortBreak > 0 {
 		c.ShortBreakDuration = shortBreak
 	}
+
 	if longBreak > 0 {
 		c.LongBreakDuration = longBreak
 	}
+
 	return c
 }
 
@@ -89,6 +93,7 @@ func nextCategory(r Repository) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
 	if li.Category == CategoryLongBreak || li.Category == CategoryShortBreak {
 		return CategoryPomodoro, nil
 	}
@@ -121,7 +126,7 @@ func tick(ctx context.Context, id int64, config *IntervalConfig,
 
 	i, err := config.repo.ByID(id)
 	if err != nil {
-		return nil
+		return err
 	}
 	expire := time.After(i.PlannedDuration - i.ActualDuration)
 
@@ -233,5 +238,6 @@ func (i Interval) Pause(config *IntervalConfig) error {
 	}
 
 	i.State = StatePaused
+
 	return config.repo.Update(i)
 }

@@ -6,7 +6,9 @@ package repository
 import (
 	"fmt"
 	"pomo/pomodoro"
+	"strings"
 	"sync"
+	"time"
 )
 
 // This type implements the repository interface
@@ -56,6 +58,7 @@ func (r *inMemoryRepo) ByID(id int64) (pomodoro.Interval, error) {
 	if id == 0 {
 		return i, fmt.Errorf("%w: %d", pomodoro.ErrInvalidID, id)
 	}
+
 	i = r.intervals[id-1]
 	return i, nil
 }
@@ -87,5 +90,29 @@ func (r *inMemoryRepo) Breaks(n int) ([]pomodoro.Interval, error) {
 			return data, nil
 		}
 	}
+
 	return data, nil
+}
+
+func (r *inMemoryRepo) CategorySummary(day time.Time,
+	filter string) (time.Duration, error) {
+
+	// Return a daily summary
+	r.RLock()
+	defer r.RUnlock()
+
+	var d time.Duration
+
+	filter = strings.Trim(filter, "%")
+
+	for _, i := range r.intervals {
+		if i.StartTime.Year() == day.Year() &&
+			i.StartTime.YearDay() == day.YearDay() {
+			if strings.Contains(i.Category, filter) {
+				d += i.ActualDuration
+			}
+		}
+	}
+
+	return d, nil
 }
