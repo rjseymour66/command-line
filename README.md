@@ -1600,6 +1600,10 @@ Go provides two strategies that maintain data integrity when you are writing con
 - Locks, such as Mutex
 - goroutines and channels
 
+#### Mutexes
+
+`RLock()` blocks and waits if the associated object is locked for writing. This provides safe concurrent read and write operations while allowing multiple reads to improve performance.
+
 #### Channels
 
 Channels allow goroutines to communicate with each other.
@@ -2311,4 +2315,81 @@ func NewSQLite3Repo(dbfile string) (*dbRepo, error) {
 	}, nil
 }
 
+```
+#### Constructing queries
+
+You have to create queries as methods on the respoitory type to satisfy the interface. Generally, queries require the following steps:
+- Create a lock on the SQL storage
+- Prepare the statement with `.Prepare()`. Pass a statement with placeholders for the arguments (in the example, it is the `?` character). The database compiles and caches the statement so you can execute the same query multiple times with different parameters more efficiently.
+  After you create the statement, make sure that you `defer x.Close()` it.
+- Execute the statement with `.Exec()`, providing the arguments. This function returns a `Result` type and an error
+- Use the [`Result`](https://pkg.go.dev/database/sql#Result) type to retrieve either the autoincremented id for the row (`LastInsertID`), or the number of rows affected by the query (`RowsAffected`).
+
+```go
+func (r *dbRepo) Create(i pomodoro.Interval) (int64, error) {
+	// Create entry in the repository
+	r.Lock()
+	defer r.Unlock()
+
+	// Prepare INSERT statement
+	insStmt, err := r.db.Prepare("INSERT INTO interval VALUES(NULL,?,?,?,?,?,")
+	if err != nil {
+		return 0, err
+	}
+	defer insStmt.Close()
+
+	// Execute INSERT statement
+	res, err := insStmt.Exec(i.StartTime, i.PlannedDuration,
+		i.ActualDuration, i.Category, i.State)
+	if err != nil {
+		return 0, err
+	}
+
+	// INSERT results
+	var id int64
+	if id, err = res.LastInsertId(); err != nil {
+		return 0, err
+	}
+
+	return id, nil
+}
+```
+
+When the query returns a row, use the `.QueryRow` function to store it in a variable. Then, you can use the `.Scan` method to convert the columns into Go values (most Go types, see the docs):
+
+```go
+// Query DB row based on ID
+row := r.db.QueryRow("SELECT * FROM table WHERE id=?", id)
+
+// Parse row into Interval struct
+i := structType{}
+err := row.Scan(&i.ID, &i.StartTime, &i.PlannedDuration,
+    &i.ActualDuration, &i.Category, &i.State)
+```
+
+If there are multiple rows returned, you can iterate through them with the [`.Next()`](https://pkg.go.dev/database/sql#Rows.Next) function. `.Next()` returns a `bool`:
+
+```go
+// Define SELECT query for breaks
+stmt := `SELECT * FROM interval WHERE category LIKE '%BREAK'
+ORDER BY id DESC LIMIT ?`
+
+// Query DB for breaks
+rows, err := r.db.Query(stmt, n)
+if err != nil {
+    return nil, err
+}
+defer rows.Close()
+
+// Parse data into slice of Interval
+data := []pomodoro.Interval{}
+for rows.Next() {
+    i := pomodoro.Interval{}
+    err = rows.Scan(&i.ID, &i.StartTime, &i.PlannedDuration,
+        &i.ActualDuration, &i.Category, &i.State)
+    if err != nil {
+        return nil, err
+    }
+    data = append(data, i)
+}
 ```
