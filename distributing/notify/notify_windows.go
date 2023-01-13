@@ -1,6 +1,9 @@
 package notify
 
-import "os/exec"
+import (
+	"fmt"
+	"os/exec"
+)
 
 // create a Cmd type
 var command = exec.Command
