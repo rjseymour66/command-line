@@ -27,7 +27,7 @@
 9. Explain any Flush() methods https://pkg.go.dev/text/tabwriter#Writer.Flush
 10. Write a section about designing a client, explaining funcs
 11. Describe how to write Cobra CLI tools w Viper
-12. How do build tags work? [Digital Ocean](https://www.digitalocean.com/community/tutorials/customizing-go-binaries-with-build-tags)
+12. How do build tags work? [Digital Ocean](https://www.digitalocean.com/community/tutorials/customizing-go-binaries-with-build-tags). They let you include and exclude files from your build and your tests according to different criteria.
 
 ## Linux stuff
 
@@ -180,6 +180,11 @@ Clean up go.mod and install missing dependencies:
 $ cd <project-root dir>
 $ go mod tidy
 ```
+Get a list of possible values for `GOOS`, which is the current operating system runtime:
+```shell
+$ go tool dist list
+```
+
 #### go mod
 
 Update the `go.mod` file with [mod commands](https://go.dev/ref/mod#mod-commands).
@@ -1160,7 +1165,18 @@ exec.Command(/path/, params...)
 ```go
 exec.LookPath(fileName string) // returns location of fileName in PATH or error
 ```
+#### Mocking a command during tests
 
+```go
+func mockCmd(exe string, args ...string) *exec.Cmd {
+	cs := []string{"-test.run=TestHelperProcess"}
+	cs = append(cs, exe)
+	cs = append(cs, args...)
+	cmd := exec.Command(os.Args[0], cs...)
+	cmd.Env = []string{"GO_WANT_HELPER_PROCESS=1"}
+	return cmd
+}
+```
 # Logging
 
 Use logs to provide feedback for background processes. To create a logger, you need to create:
